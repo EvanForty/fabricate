@@ -1,0 +1,1196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Fabricate: design chips, fabricate silicon, manufacture tokens</title>
+<meta name="description" content="Fabricate is a Solana launchpad of autonomous chip fab NFTs. Fabs produce wafers of virtual chips, launch chip-backed coins on pump.fun and route creator fees back to the fab.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/logo.png">
+<meta name="theme-color" content="#131415">
+<meta property="og:title" content="Fabricate: design chips, fabricate silicon, manufacture tokens">
+<meta property="og:description" content="Autonomous chip fab NFTs that fabricate wafers of virtual chips, launch chip-backed coins on pump.fun and route creator fees back to the fab.">
+<meta property="og:image" content="/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oxanium:wght@500;600;700;800&family=Public+Sans:wght@400;500;600;700&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.3/lib/index.iife.min.js"></script>
+<style>
+:root{
+  --bg:#EDEFF0;--panel:#FFFFFF;--ink:#15181A;--soft:#3F474D;--mute:#6C767D;--rule:#D6DADD;--edge:#15181A;--frame:#15181A;
+  --cy:#00B9C9;--cy-ink:#00707A;--tile:#131415;
+  --grid:rgba(21,24,26,.05);--stripe:rgba(21,24,26,.035);
+  --f-head:'Oxanium','Arial Narrow',sans-serif;
+  --f-ui:'Public Sans',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --f-mono:'Fira Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121314;--panel:#1A1C1E;--ink:#EEF1F3;--soft:#B8C0C6;--mute:#7B858C;--rule:#2A2E31;--edge:#EEF1F3;--frame:#3A4045;
+    --cy:#19DCEA;--cy-ink:#5BE7F1;
+    --grid:rgba(255,255,255,.03);--stripe:rgba(255,255,255,.035);color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121314;--panel:#1A1C1E;--ink:#EEF1F3;--soft:#B8C0C6;--mute:#7B858C;--rule:#2A2E31;--edge:#EEF1F3;--frame:#3A4045;
+  --cy:#19DCEA;--cy-ink:#5BE7F1;
+  --grid:rgba(255,255,255,.03);--stripe:rgba(255,255,255,.035);color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background-color:var(--bg);color:var(--ink);font:400 15.5px/1.55 var(--f-ui);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:20px 20px;-webkit-font-smoothing:antialiased}
+img,svg{max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit}
+:focus-visible{outline:2px dashed var(--cy-ink);outline-offset:3px}
+.wrap{max-width:1420px;margin:0 auto;padding:16px}
+.panel{background:var(--panel);border:1.5px solid var(--frame)}
+.ph{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0;padding:13px 18px;border-bottom:1px solid var(--rule);font:500 12px/1.2 var(--f-mono);letter-spacing:.07em;text-transform:uppercase}
+.ph small{font-weight:400;color:var(--mute);letter-spacing:.04em}
+.ph .pix{height:18px;width:auto}
+.ph .end{margin-left:auto}
+.pad{padding:18px}
+.tag{display:inline-block;font:500 10.5px/1 var(--f-mono);letter-spacing:.05em;padding:5px 7px;background:var(--ink);color:var(--bg);text-transform:uppercase}
+.tag.cy{background:var(--cy);color:#0B1213}
+.tag.ghost{background:transparent;color:var(--soft);border:1px solid var(--rule)}
+.pix rect{fill:var(--ink)} .pix .c{fill:var(--cy)}
+.small{font-size:13px;color:var(--soft)}
+.warn{color:#B42318}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .warn{color:#FF9B8C}}
+:root[data-theme="dark"] .warn{color:#FF9B8C}
+.tile{background:var(--tile);display:block}
+.fab{display:block;width:100%;height:auto}
+
+/* header */
+.top{margin-bottom:16px}
+.nav{display:grid;grid-template-columns:auto 1fr auto}
+.brand{display:flex;align-items:center;gap:12px;padding:10px 20px;border-right:1px solid var(--rule);text-decoration:none}
+.brand .tile{width:62px;padding:3px;flex:none}
+.brand b{display:block;font:800 28px/.9 var(--f-head);letter-spacing:.03em;text-transform:uppercase}
+.brand small{display:block;margin-top:6px;font:400 11px/1 var(--f-mono);color:var(--mute);letter-spacing:.05em}
+.tabs{display:grid;grid-template-columns:repeat(7,minmax(96px,1fr));overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs a{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:15px 8px 12px;border-right:1px solid var(--rule);text-decoration:none;color:var(--soft);font:400 11px/1 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.tabs a em{position:absolute;top:7px;right:8px;font-style:normal;color:var(--mute);font-size:10px}
+.tabs a .pix{height:22px;width:auto}
+.tabs a:hover{background:var(--stripe)}
+.tabs a[aria-current="page"]{color:var(--ink);box-shadow:inset 0 -4px 0 var(--cy)}
+.walletcell{position:relative;display:flex;align-items:center;padding:12px 18px}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;font:700 14px/1.2 var(--f-ui);border:1.5px solid var(--edge);background:var(--panel);color:var(--ink);padding:12px 16px;cursor:pointer;box-shadow:3px 3px 0 var(--edge);text-decoration:none;white-space:nowrap}
+.btn:active:not([disabled]){transform:translate(2px,2px);box-shadow:1px 1px 0 var(--edge)}
+.btn.cy{background:var(--cy);color:#0B1213;border-color:#0B1213}
+.btn.dark{background:var(--ink);color:var(--bg)}
+.btn.sm{padding:7px 10px;font-size:12.5px;box-shadow:2px 2px 0 var(--edge)}
+.btn.wide{width:100%;padding:19px;font-size:16px}
+.btn[disabled]{opacity:.4;cursor:not-allowed;box-shadow:none}
+.btn .dot{width:9px;height:9px;background:#0B1213;display:inline-block}
+.btn.connected .dot{background:var(--cy);outline:1.5px solid var(--edge)}
+.chip{font:500 11px/1 var(--f-mono);letter-spacing:.03em;border:1.5px solid var(--edge);background:var(--panel);padding:7px 10px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--cy);color:#0B1213;border-color:#0B1213}
+.link{font:700 13px/1 var(--f-ui);border:0;background:none;padding:3px 0;border-bottom:3px solid var(--cy);cursor:pointer;text-decoration:none}
+
+/* foundry */
+.grid-hero{display:grid;grid-template-columns:minmax(300px,400px) minmax(0,1fr);gap:16px;align-items:start}
+.col{display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-content:start;min-width:0}
+label,.lbl{display:block;font:400 11px/1.2 var(--f-mono);color:var(--soft);letter-spacing:.05em;text-transform:uppercase;margin-bottom:5px}
+.big{display:flex;align-items:baseline;gap:10px;margin:14px 0 6px}
+.big b{font:800 100px/.85 var(--f-head)}
+.big span{font:600 26px var(--f-head);color:var(--mute)}
+.ticks{display:flex;gap:2px;height:16px;margin:8px 0 18px}
+.ticks i{flex:1;background:var(--rule)} .ticks i.on{background:var(--ink)} .ticks i.last{background:var(--cy)}
+.kv4{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rule);margin-bottom:18px}
+.kv4>div{padding:12px 14px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.kv4>div:nth-child(2n){border-right:0}
+.kv4>div:nth-last-child(-n+2){border-bottom:0}
+.kv4 b{font:500 17px/1.2 var(--f-mono)}
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center}
+.hero .ph{grid-column:1 / -1}
+.hero-copy{padding:28px 10px 28px 28px}
+h1{font:800 clamp(36px,4.2vw,62px)/.95 var(--f-head);text-transform:uppercase;letter-spacing:.01em;margin:0 0 16px}
+h1 em{font-style:normal;color:var(--cy-ink)}
+.hero-copy p{font-size:16.5px;color:var(--soft);margin:0 0 18px;max-width:48ch}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;font:400 12px var(--f-mono);color:var(--soft)}
+.legend span{display:inline-flex;align-items:center;gap:8px}
+.legend i{width:11px;height:11px;display:inline-block;outline:1px solid var(--rule)}
+.waferwrap{padding:18px 24px 18px 8px}
+.wafer{display:block;width:100%;max-width:560px;height:auto;margin:0 auto}
+.wafer .scan{animation:scan 6s linear infinite}
+@keyframes scan{from{transform:translateY(0)}to{transform:translateY(184px)}}
+.wafer rect.d{cursor:help}
+.kv2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+.kv2>div{padding:14px 18px}
+.kv2>div+div{border-left:1px solid var(--rule)}
+.kv2 b{font:800 24px/1.05 var(--f-head);text-transform:uppercase;overflow-wrap:anywhere}
+.btnrow{display:flex;gap:12px;padding:18px;border-top:1px solid var(--rule)}
+.btnrow .btn{flex:1}
+.feed{display:grid;grid-template-columns:repeat(6,1fr)}
+.feed>div{padding:18px 14px;text-align:center;border-right:1px solid var(--rule)}
+.feed>div:last-child{border-right:0}
+.feed .cp{width:44px;height:44px;margin:0 auto 10px;display:block}
+.feed b{display:block;font:800 21px var(--f-head)}
+.feed p{margin:2px 0 6px;font-size:13px;color:var(--soft);line-height:1.35}
+.ago{font:400 11px var(--f-mono);color:var(--mute);letter-spacing:.04em;text-transform:uppercase}
+.empty{padding:28px 20px;color:var(--soft);display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.empty .tile{width:64px;padding:3px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr)}
+.steps>div{padding:20px 18px 24px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.steps>div:nth-child(3n){border-right:0}
+.steps>div:nth-last-child(-n+3){border-bottom:0}
+.steps .pix{height:30px;width:auto;margin-bottom:12px} .steps .tile{width:54px;padding:2px;margin-bottom:12px} .steps .cp,.cycle .cp{width:32px;height:32px;margin-bottom:12px}
+.steps .n{display:block;font:500 12px var(--f-mono);color:var(--cy-ink);margin-bottom:6px}
+.steps h3{margin:0 0 6px;font:700 21px/1.1 var(--f-head);text-transform:uppercase}
+.steps p{margin:0;color:var(--soft);font-size:14.5px}
+.mt{margin-top:16px}
+.cp{display:inline-block}
+
+/* deploy */
+.grid-2{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:16px;align-items:start}
+.step h3{font:800 30px/1.05 var(--f-head);text-transform:uppercase;margin:0 0 8px}
+.step p{margin:0 0 16px;color:var(--soft);max-width:68ch}
+.nodes{display:grid;grid-template-columns:repeat(5,1fr);border:1px solid var(--rule)}
+.nodes>div{padding:14px;border-right:1px solid var(--rule)}
+.nodes>div:last-child{border-right:0}
+.nodes b{display:block;font:800 30px/1 var(--f-head)}
+.nodes span{display:block;font-size:13px;color:var(--soft);margin-top:6px}
+.nodes dl{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:10px 0 0;font:400 11.5px var(--f-mono)}
+.nodes dt{color:var(--mute)} .nodes dd{margin:0;text-align:right}
+.note{font-size:13.5px;color:var(--soft);margin:14px 0 0;padding-left:12px;border-left:3px solid var(--cy)}
+.youget{display:flex;gap:18px;align-items:center;padding:18px}
+.youget .tile{width:150px;padding:6px;flex:none}
+.youget b{display:block;font:800 44px/1 var(--f-head)}
+.youget span{color:var(--soft);font-size:14px}
+.rows>div{display:flex;justify-content:space-between;gap:16px;align-items:baseline;padding:14px 18px;border-bottom:1px solid var(--rule)}
+.rows>div:last-child{border-bottom:0}
+.rows label{margin:0}
+.rows b{font:500 15px var(--f-mono);text-align:right}
+
+/* fabs */
+.kv5{display:grid;grid-template-columns:repeat(5,1fr)}
+.kv5>div{padding:16px 18px;border-right:1px solid var(--rule)}
+.kv5>div:last-child{border-right:0}
+.kv5 b{display:block;font:500 21px/1.2 var(--f-mono)}
+.kv5 b.g{color:var(--cy-ink)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;padding:18px;border-top:1px solid var(--rule)}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+.chipc{padding:14px 16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);display:flex;flex-direction:column}
+.chipc .top2{display:flex;gap:12px;align-items:center;margin-bottom:8px}
+.chipc .cp{width:40px;height:40px;flex:none}
+.chipc h4{margin:0;font:800 21px/1 var(--f-head)}
+.chipc .ty{font:400 11.5px var(--f-mono);color:var(--soft)}
+.chipc dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0 0 12px;font:400 11.5px var(--f-mono)}
+.chipc dt{color:var(--mute)} .chipc dd{margin:0;text-align:right}
+.chipc .btns{margin-top:auto}
+.grade{display:inline-block;font:700 11px var(--f-mono);padding:2px 6px;border:1.5px solid var(--edge)}
+.grade.A{background:var(--cy);color:#0B1213;border-color:#0B1213}
+.frow{display:grid;grid-template-columns:170px minmax(0,1fr) minmax(0,1.15fr);border-top:1px solid var(--rule)}
+.frow:first-of-type{border-top:0}
+.frow>div{padding:18px}
+.frow>div+div{border-left:1px solid var(--rule)}
+.frow .tile{width:100%;padding:6px}
+.frow h3{margin:0 0 8px;font:800 34px/1 var(--f-head);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px 18px;margin:10px 0 14px}
+.stats b{display:block;font:500 15px var(--f-mono)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+.up{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px dashed var(--rule)}
+.up:last-child{border-bottom:0}
+.up b{font:700 14.5px var(--f-ui)}
+.up small{grid-column:1;font-size:12.5px;color:var(--soft)}
+.up .btn,.up .seg{grid-row:1 / span 2;grid-column:2}
+.pips{display:inline-flex;gap:3px;margin-left:8px;vertical-align:1px}
+.pips i{width:9px;height:9px;border:1px solid var(--edge);display:inline-block}
+.pips i.on{background:var(--cy)}
+.rentbox{border:1px solid var(--rule);padding:12px 14px;margin-bottom:10px;background:var(--stripe)}
+.rentbox b{display:block;font:700 14.5px var(--f-ui);margin-bottom:2px}
+.rentbox p{margin:0 0 10px;font-size:13px;color:var(--soft)}
+.filters{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;padding:16px 18px}
+.seg{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.seg>span{font:400 11px var(--f-mono);color:var(--mute);letter-spacing:.05em;text-transform:uppercase;margin-right:4px}
+.lists{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.lcard{display:grid;grid-template-columns:120px minmax(0,1fr);gap:14px;padding:16px;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.lcard .tile{width:120px;padding:4px}
+.lcard h4{margin:0 0 6px;font:800 26px/1 var(--f-head);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.lcard dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0 0 12px;font:400 11.5px var(--f-mono)}
+.lcard dt{color:var(--mute)} .lcard dd{margin:0;text-align:right}
+.lcard .btn{width:100%;white-space:normal;text-align:center}
+.auc{display:grid;grid-template-columns:180px minmax(0,1fr) auto;gap:22px;align-items:center;padding:20px}
+.auc .tile{width:180px;padding:6px}
+.auc h4{margin:0 0 4px;font:800 30px/1 var(--f-head)}
+.bid{font:800 40px/1 var(--f-head);margin:6px 0}
+.bid small{font:400 13px var(--f-mono);color:var(--soft)}
+
+/* how */
+.cycle{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule)}
+.cycle>div{padding:18px;border-right:1px solid var(--rule);position:relative}
+.cycle>div:last-child{border-right:0}
+.cycle>div:not(:last-child)::after{content:"→";position:absolute;right:-10px;top:50%;transform:translateY(-50%);background:var(--panel);font:600 16px var(--f-mono);z-index:1}
+.cycle b{display:block;font:800 20px/1.1 var(--f-head);text-transform:uppercase;margin:8px 0 4px}
+.cycle span{font-size:13.5px;color:var(--soft)}
+.cycle .pix{height:28px;width:auto}
+.split{padding:22px 22px 6px}
+.squares{display:grid;grid-template-columns:repeat(50,1fr);gap:2px}
+.squares i{aspect-ratio:1;display:block}
+.sq-a{background:var(--cy)} .sq-b{background:var(--ink)} .sq-c{background:var(--mute);opacity:.5}
+.splitkeys{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--rule);margin-top:18px}
+.splitkeys>div{padding:16px 22px;border-right:1px solid var(--rule)}
+.splitkeys>div:last-child{border-right:0}
+.splitkeys .k{display:flex;gap:8px;align-items:center;font:700 15px var(--f-ui)}
+.splitkeys .k i{width:13px;height:13px;display:inline-block}
+.splitkeys b{display:block;font:800 56px/1 var(--f-head);margin:8px 0 4px}
+.splitkeys p{margin:0;color:var(--soft);font-size:14px}
+.fly{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--rule)}
+.fly>div{padding:18px;border-right:1px solid var(--rule)}
+.fly>div:last-child{border-right:0;background:var(--stripe)}
+.fly b{display:block;font:800 19px/1.1 var(--f-head);text-transform:uppercase;margin-bottom:4px}
+.fly span{font-size:13.5px;color:var(--soft)}
+.pbody{padding:18px 22px}
+.pbody p{margin:0 0 10px;color:var(--soft)}
+.pbody p:last-child{margin:0}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+th{font:400 11px var(--f-mono);letter-spacing:.05em;text-transform:uppercase;color:var(--soft);text-align:left;padding:10px 14px;border-bottom:1px solid var(--rule);background:var(--stripe)}
+td{padding:12px 14px;border-bottom:1px solid var(--rule);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right;font-family:var(--f-mono)}
+td .cp{width:24px;height:24px;vertical-align:middle}
+.tw{overflow-x:auto}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:start}
+
+/* docs */
+.docs{display:grid;grid-template-columns:250px minmax(0,1fr);gap:16px;align-items:start}
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.toc ol{list-style:none;margin:0;padding:8px 18px 14px}
+.toc li button{display:flex;gap:14px;width:100%;text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:10px 0;cursor:pointer;font-size:14.5px}
+.toc li button span{font:400 11px var(--f-mono);color:var(--mute);padding-top:3px}
+.doc{scroll-margin-top:16px}
+.doc .body{padding:20px 24px 24px;max-width:80ch}
+.doc .body p,.doc .body li{color:var(--soft)}
+.doc .body strong{color:var(--ink)}
+.doc .body h4{font:800 20px var(--f-head);text-transform:uppercase;margin:20px 0 6px}
+.doc code{font:400 12.5px var(--f-mono);background:var(--stripe);padding:2px 5px}
+.doc .tw{margin:12px 0;border:1px solid var(--rule)}
+details{border-bottom:1px solid var(--rule)}
+details summary{cursor:pointer;padding:13px 0;font-weight:700;list-style:none}
+details summary::before{content:"▸";display:inline-block;width:18px;font-size:12px}
+details[open] summary::before{content:"▾"}
+details p{margin:0 0 14px 18px}
+
+/* overlays */
+.scrim{position:fixed;inset:0;background:rgba(8,9,10,.65);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.modal{max-width:640px;width:100%;max-height:calc(100% - 32px);overflow:auto;box-shadow:6px 6px 0 var(--cy)}
+.x{margin-left:auto;background:none;border:0;font:700 18px var(--f-mono);cursor:pointer;padding:0 4px}
+.wlist{display:grid;gap:10px;padding:18px}
+.wopt{display:flex;align-items:center;gap:14px;border:1.5px solid var(--edge);background:var(--panel);padding:12px 14px;cursor:pointer;text-align:left;font:700 15px var(--f-ui);text-decoration:none}
+.wopt img,.wopt .ph-ico{width:28px;height:28px;flex:none}
+.wopt .ph-ico{background:var(--mute)}
+.wopt em{margin-left:auto;font:400 11px var(--f-mono);font-style:normal;color:var(--cy-ink);text-transform:uppercase;letter-spacing:.05em}
+.wopt:hover{background:var(--stripe)}
+.menu{position:absolute;right:18px;top:calc(100% - 4px);z-index:40;min-width:260px;box-shadow:4px 4px 0 var(--cy)}
+.menu .rows>div{padding:12px 16px}
+.mitems{display:grid;border-top:1px solid var(--rule)}
+.mitems button,.mitems a{text-align:left;background:none;border:0;border-bottom:1px solid var(--rule);padding:12px 16px;cursor:pointer;font:600 14px var(--f-ui);text-decoration:none}
+.mitems>*:last-child{border-bottom:0}
+.toasts{position:fixed;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:grid;gap:8px;z-index:60;max-width:min(380px,calc(100% - 32px))}
+.toast{background:var(--ink);color:var(--bg);padding:12px 16px;font:600 14px var(--f-ui);box-shadow:4px 4px 0 var(--cy)}
+footer{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between;padding:22px 2px 36px;font-size:13px;color:var(--soft)}
+
+@media (max-width:1200px){
+  .grid-hero{grid-template-columns:minmax(0,1fr)}
+  .grid-hero>.hero{order:-1}
+  .grid-2{grid-template-columns:minmax(0,1fr)}
+  .nodes{grid-template-columns:repeat(3,1fr)}
+  .nodes>div{border-bottom:1px solid var(--rule)}
+  .feed{grid-template-columns:repeat(3,1fr)}
+  .feed>div:nth-child(3n){border-right:0}
+  .feed>div:nth-child(-n+3){border-bottom:1px solid var(--rule)}
+  .frow{grid-template-columns:150px minmax(0,1fr)}
+  .frow>div:last-child{grid-column:1 / -1;border-left:0;border-top:1px solid var(--rule)}
+  .docs{grid-template-columns:minmax(0,1fr)}
+  .toc{position:static}
+  .kv5{grid-template-columns:repeat(3,1fr)}
+  .kv5>div:nth-child(3){border-right:0}
+  .kv5>div:nth-child(-n+3){border-bottom:1px solid var(--rule)}
+  .fly,.cycle{grid-template-columns:1fr 1fr}
+  .fly>div,.cycle>div{border-bottom:1px solid var(--rule)}
+  .cycle>div::after{display:none}
+}
+@media (max-width:1100px){
+  .nav{grid-template-columns:1fr auto}
+  .brand{border-right:0}
+  .tabs{grid-column:1 / -1;grid-row:2;display:flex;border-top:1px solid var(--rule)}
+  .tabs a{flex:1 0 96px}
+}
+@media (max-width:760px){
+  .hero{grid-template-columns:minmax(0,1fr)}
+  .hero-copy{padding:24px 20px 6px}
+  .waferwrap{padding:10px 16px 22px}
+  .auc{grid-template-columns:minmax(0,1fr)}
+  .steps{grid-template-columns:minmax(0,1fr)}
+  .steps>div{border-right:0!important;border-bottom:1px solid var(--rule)!important}
+}
+@media (max-width:700px){
+  .wrap{padding:10px}
+  .two,.nodes,.fly,.cycle{grid-template-columns:minmax(0,1fr)}
+  .nodes>div,.fly>div,.cycle>div{border-right:0}
+  .feed{grid-template-columns:1fr 1fr}
+  .feed>div{border-bottom:1px solid var(--rule)}
+  .feed>div:nth-child(2n){border-right:0}
+  .feed>div:nth-child(3n){border-right:1px solid var(--rule)}
+  .feed>div:nth-child(6n){border-right:0}
+  .kv5{grid-template-columns:1fr 1fr}
+  .kv5>div{border-right:1px solid var(--rule)!important;border-bottom:1px solid var(--rule)}
+  .kv5>div:nth-child(2n){border-right:0!important}
+  .splitkeys{grid-template-columns:1fr}
+  .splitkeys>div{border-right:0;border-bottom:1px solid var(--rule)}
+  .squares{grid-template-columns:repeat(25,1fr)}
+  .big b{font-size:80px}
+  .kv2 b{font-size:20px}
+  .brand{padding:10px 12px;gap:8px}
+  .brand .tile{width:44px}
+  .brand b{font-size:21px}
+  .walletcell{padding:10px 12px}
+  .walletcell .btn{padding:9px 10px;font-size:12.5px;gap:7px}
+  .frow{grid-template-columns:minmax(0,1fr)}
+  .frow>div+div{border-left:0;border-top:1px solid var(--rule)}
+  .frow .tile{max-width:200px}
+  .lists{grid-template-columns:minmax(0,1fr)}
+  .lcard{grid-template-columns:96px minmax(0,1fr)}
+  .lcard .tile{width:96px}
+  .legend{grid-template-columns:1fr}
+}
+@media (prefers-reduced-motion:reduce){
+  .wafer .scan{animation:none;opacity:0}
+  .btn:active:not([disabled]){transform:none}
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="sprites"></defs></svg>
+
+<div class="wrap">
+  <header class="top panel">
+    <div class="nav">
+      <a class="brand" href="#foundry" aria-label="Fabricate home">
+        <span class="tile"><svg class="fab" viewBox="0 0 80 60" shape-rendering="crispEdges" aria-hidden="true"><use href="#fabOn"/></svg></span>
+        <span><b>Fabricate</b><small>$FABRICATE</small></span>
+      </a>
+      <nav class="tabs" id="tabs" aria-label="Sections"></nav>
+      <div class="walletcell">
+        <button class="btn cy" id="walletBtn" data-act="wallet" aria-haspopup="true"><i class="dot"></i><span>Connect wallet</span></button>
+        <div class="menu panel" id="walletMenu" hidden></div>
+      </div>
+    </div>
+  </header>
+
+  <main id="view" tabindex="-1"></main>
+
+  <footer>
+    <span>Fabricate. Design chips. Fabricate silicon. Manufacture tokens.</span>
+  </footer>
+</div>
+
+<div id="overlay"></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* ---------- logo pixel grid ---------- */
+const FAB = ["....................................ccccccc.....................................", "....................................ccccccc.....................................", "..................................w.ccccccc.ww..................................", ".................................wwdddddddddww..................................", "...............................w.ww.ddddddd.ww.w................................", ".............................www...............ww...............................", ".............................www...............www..............................", ".........wwwwwwww............wwwwwwwwwwwwwwwwwwwww............wwwwwwww..........", ".........wwwwwwww.wwwwwwwwww.ww..wwwwwwwwwwwww..ww.wwwwwwwwww.wwwwwwww..........", "........wwwwwwwdd.wwwwwwwwww.ww..wwwwwwwwwwwwl..ww.wwwwwwwwww..dwwwwwww.........", ".......ww.....w..ww..wd..dmm.ww..w..dddddddd.m..ww.mm.ww.wwwwd..w......w........", ".......w......w..dd...dddd.m.ww..w..ddddddd..m..ww..........d...w......w........", ".......w..cc..w..............ww..w..............ww..............w..cc..w........", ".......w..cc..w..............ww..w.d.ccccc...m..ww..............w..cc..w........", ".......w......w..............ww..w...ccccc...m..ww..............w......w........", ".......w......w..............ww..w...ccccc...m..ww..............w......w........", ".......wwwwwwww..mwwwwwwwwww.ww..w...ccccc...m..ww.wwwwwwwwwww..wwwwwwww........", ".........wll.....................w...........m.....................mmm..........", ".........www.....d...............w...........m.....................www..........", "........wwwwww..dd............wwww...........mwww............dd..wwwwww.........", "........wwwwww.d..............wwwww.........wwwww..............d.wwwwww.........", "........wwwwww.................dwwwwwwwwwwwwwwwd.................wwwwww.........", "........wwwwww.d................dwww........wwd................d.wwwwww.........", "........w...ww.d.................www........ww................dd.ww...w.........", "........w..cww.d..................ww.ccccc..w....................wwc..w.........", "........w..cww.d.................................................wwc..w.........", "........w..cww...................................................wwc..w.........", "........w..cww......................wwwwwww......................wwc..w.........", "........w..cww.................................................m.wwc..w.........", "........w..cww.........................c.........................wwc..w.........", "........w..cww.........................c.........................wwc..w.........", "........w..www..................cc.....w.....cc..................wwc..w.........", "........w..www.........................w.........................wwc..w.........", "........w..lww.m...................c...w...c.....................wwc..w.........", "........w..cww.mm....................llww........................wwc..w.........", "........w..cww.mm............wwwwccccccwccccccwwww.............m.wwc..w.........", "........w...ww.......www..wwwccccwcccwwwwwcccwccccwww..www.......ww...w.........", "........wwwwww.m...www...wwwwccccwllcwwwwwcccwccccwwww...www.....wwwwww.........", "........wwwwww....wwww..wcc.cw...c...lcccl...lc..ww..cw..wwww....wwwwww.........", "........wwwwww.d..wwd.ww....lc..cc...c...lc..cc...l....ww.ddw.dd.wwwwww.........", "........dddd..d..wmdd.wwccccwcccwccccwcccwwcclwcccwccccww.ddww..d..dddd.........", "......wwwwww..d..wwdd.www..cc...c...ll...cc...cc..cc..www.dddw..d..wwwwww.......", "......wwwwww.....wmdd...wwwlccccccccllccccccccwcccccwwww..dddw.....wwwwww.......", "................wwdddd...wwwwwwww...ww...ww...clwwwwww...ddddww.................", ".....wccccc....wwwddddd....wwwwwwwwwwwwwwwwwwwwwwwww.....ddddwww....cccccw......", ".....wccccc..ww.wwwwwwddd.......wwwwwwwwwwwwwwww......dddwwwwww.ww..cccccw......", "....w.d.....www.wdddwwwdddd........................ddddddwwdddd.www.......w.....", "...wwd.....www.......dddddddddd.................dddddddddd.......www......ww....", "..wwd......wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww......dww...", "..ww.......wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.......ww...", ".wwwmd.....wdddddddddddddddddddd....................dddddddddddddddw.....mmwwwm.", "wwwwwwwww..wddd.................................................dddw..wwwwwwwww.", "wwww.......wddd.................................................dddw.......wwww.", "wwww..ccc..wddd.......ccc.............ccc.............ccc.......dddw..cccc.wwww.", "wwww.cccc..wddd.......ccc.............ccc.............ccc.......dddw..cccc.wwww.", "wwww........ddd.................................................ddd........wwww.", ".www.........dd.................................................dd.........wwwm.", "..wwwwwwwwww.......................................................wwwwwwwwww...", "....wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.....", "....wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.wwwwwwwww....."];
+
+/* ---------- config ---------- */
+const DAY = 86400, HOUR = 3600;
+const CFG = {
+  RPC: 'https://api.mainnet-beta.solana.com', // swap for your own RPC (Helius, Triton…) when you deploy
+  X: 'https://x.com/FabricateRent',
+  SUPPLY: 1000, MINT0: 0.25, MINT1: 1.25,
+  OPER: 0.60, BURN: 0.25, OPS: 0.15,
+  RENT_OWNER: 0.90, RENT_BURN: 0.10, SALE_ROYALTY: 0.05,
+  WAFER_H: 3, CHIP_TTL: 24 * HOUR,
+  PRICE0: 0.0000012, TOKEN_SUPPLY: 1e9,
+  START_T: 2 * DAY + 9 * HOUR,
+  OTHER_RATE: 4 / 1440
+};
+const NODES = [
+  { n: '28nm', slots: 1, cost: 0, cap: 'Basic AI automation chips' },
+  { n: '14nm', slots: 2, cost: 25000, cap: 'Multi-agent processing chips' },
+  { n: '7nm', slots: 3, cost: 60000, cap: 'Advanced trading and analytics chips' },
+  { n: '5nm', slots: 4, cost: 120000, cap: 'High-performance AI agent chips' },
+  { n: '3nm', slots: 5, cost: 220000, cap: 'Experimental autonomous computing chips' }
+];
+const TYPES = [
+  { k: 'auto', name: 'Automation', node: 0, mu: Math.log(0.08), sd: 1.0, col: '#9BEAF2', val: 1 },
+  { k: 'multi', name: 'Multi-agent', node: 1, mu: Math.log(0.09), sd: 1.2, col: '#4FD6E4', val: 1.2 },
+  { k: 'trade', name: 'Trading', node: 2, mu: Math.log(0.09), sd: 1.5, col: '#19DCEA', val: 1.4 },
+  { k: 'ana', name: 'Analytics', node: 2, mu: Math.log(0.085), sd: 1.4, col: '#2FA9C9', val: 1.35 },
+  { k: 'agent', name: 'AI agent', node: 3, mu: Math.log(0.09), sd: 1.7, col: '#7FF3FF', val: 1.6 },
+  { k: 'exp', name: 'Experimental', node: 4, mu: Math.log(0.07), sd: 2.2, col: '#E9FDFF', val: 1.8 }
+];
+const GRADES = { A: 1.3, B: 1, C: 0.75 };
+const UP = {
+  litho: { name: 'Lithography speed', max: 5, cost: l => 5000 * l, eff: 'Each level fabricates wafers 15% faster' },
+  yld:   { name: 'Yield control', max: 5, cost: l => 6000 * l, eff: 'More grade A chips, fewer grade C' }
+};
+const DURS = [{ h: 1, name: '1 hour', off: 0 }, { h: 24, name: '1 day', off: 0.10 }, { h: 168, name: '1 week', off: 0.25 }];
+const NARR = { a: ['Capybara','Frog','Goose','Hamster','Penguin','Raccoon','Otter','Pigeon','Axolotl','Walrus','Silicon','Quartz','Photon','Qubit','Neuron','Vector','Tensor','Cache','Kernel','Logic'], b: ['Core','Chip','Gate','Die','Wafer','Node','Bus','Fab','Cell','Array','Unit','Bit','Clock','Grid','Labs','Council','Club','Union','Crew','Mesh'] };
+
+/* ---------- utils ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function mulberry(a){ return function(){ a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function gauss(r = Math.random){ let u = 0, v = 0; while (!u) u = r(); while (!v) v = r(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+const pick = (arr, r = Math.random) => arr[Math.floor(r() * arr.length)];
+const fmtSol = x => { x = +x || 0; return x >= 100 ? x.toFixed(1) : x >= 1 ? x.toFixed(2) : x >= 0.01 ? x.toFixed(3) : x > 0 ? x.toFixed(4) : '0'; };
+const fmtTok = x => { x = +x || 0; if (x >= 1e9) return (x/1e9).toFixed(2) + 'B'; if (x >= 1e6) return (x/1e6).toFixed(x >= 1e7 ? 1 : 2) + 'M'; if (x >= 1e3) return (x/1e3).toFixed(x >= 1e4 ? 0 : 1) + 'k'; return Math.round(x) + ''; };
+const pad2 = n => String(n).padStart(2, '0');
+function ago(t){ const s = S.t - t; if (s < 60) return 'just now'; if (s < HOUR) return Math.floor(s / 60) + ' min ago'; if (s < DAY) return `${Math.floor(s / HOUR)} h ${Math.floor(s % HOUR / 60)} min ago`; return Math.floor(s / DAY) + ' d ago'; }
+function left(t){ const s = Math.max(0, t - S.t); if (s < HOUR) return Math.max(1, Math.ceil(s / 60)) + ' min'; if (s < DAY) return `${Math.floor(s / HOUR)} h ${Math.floor(s % HOUR / 60)} min`; return `${Math.floor(s / DAY)} d ${Math.floor(s % DAY / HOUR)} h`; }
+const short = a => a ? a.slice(0, 4) + '…' + a.slice(-4) : '';
+const B58 = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+const randAddr = r => Array.from({ length: 44 }, () => B58[Math.floor(r() * 58)]).join('');
+const mintPrice = n => CFG.MINT0 + (CFG.MINT1 - CFG.MINT0) * (Math.min(n, CFG.SUPPLY) - 1) / (CFG.SUPPLY - 1);
+const price = () => CFG.PRICE0 * (1 + S.burned / CFG.TOKEN_SUPPLY * 40);
+const r50 = x => Math.max(50, Math.round(x / 50) * 50);
+const slotsOf = f => NODES[f.node].slots;
+const perWafer = f => 4 + 2 * f.node;
+const waferInt = f => CFG.WAFER_H * HOUR * Math.pow(0.85, f.litho - 1);
+const chipValue = c => r50(2200 * TYPES.find(t => t.k === c.type).val * GRADES[c.grade] * Math.max(0.2, 1 - (S.t - c.t) / CFG.CHIP_TTL));
+
+/* ---------- sprites: the logo, from its own pixels ---------- */
+(function(){
+  const colOn = { w: '#F4F2EC', c: '#19DCEA', l: '#96ECF4', d: '#3A3C42', m: '#82848A' };
+  const colOff = Object.assign({}, colOn, { c: '#5C6870', l: '#7A858C' });
+  const build = pal => { let r = ''; FAB.forEach((row, y) => { let x = 0; while (x < row.length) { const ch = row[x]; if (pal[ch]) { const s = x; while (x < row.length && row[x] === ch) x++; r += `<rect x="${s}" y="${y}" width="${x - s}" height="1" fill="${pal[ch]}"/>`; } else x++; } }); return r; };
+  document.getElementById('sprites').innerHTML = `<g id="fabOn">${build(colOn)}</g><g id="fabOff">${build(colOff)}</g>`;
+})();
+const fabTile = (on = true, extra = '') => `<span class="tile" role="img" aria-label="Chip fab">${'<svg class="fab" viewBox="0 0 80 60" shape-rendering="crispEdges" aria-hidden="true">'}<use href="#${on ? 'fabOn' : 'fabOff'}"/>${extra}</svg></span>`;
+function fabArt(f){
+  const live = f.live > 0, n = f.node;
+  let extra = '';
+  for (let i = 0; i < 5; i++) extra += `<rect x="${2 + i * 5}" y="2" width="4" height="2" fill="${i <= n ? '#19DCEA' : '#2A2E31'}"/>`;
+  return fabTile(live, extra);
+}
+function chipIcon(type, grade){
+  const t = TYPES.find(x => x.k === type), c = t ? t.col : '#9BEAF2';
+  let r = `<rect x="3" y="3" width="10" height="10" fill="#1A1C1E"/><rect x="4" y="4" width="8" height="8" fill="#2A2E31"/><rect x="6" y="6" width="4" height="4" fill="${c}"/>`;
+  for (let i = 0; i < 4; i++) { const p = 4 + i * 2.4; r += `<rect x="${p}" y="1" width="1" height="2" fill="#B8C0C6"/><rect x="${p}" y="13" width="1" height="2" fill="#B8C0C6"/><rect x="1" y="${p}" width="2" height="1" fill="#B8C0C6"/><rect x="13" y="${p}" width="2" height="1" fill="#B8C0C6"/>`; }
+  if (grade === 'A') r += `<rect x="4" y="4" width="2" height="1" fill="${c}"/>`;
+  return `<svg class="cp" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+function pix(rows){
+  const h = rows.length, w = rows[0].length; let r = '';
+  rows.forEach((row, y) => [...row].forEach((c, x) => { if (c === '#') r += `<rect x="${x}" y="${y}" width="1" height="1"/>`; else if (c === 'c') r += `<rect class="c" x="${x}" y="${y}" width="1" height="1"/>`; }));
+  return `<svg class="pix" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r}</svg>`;
+}
+const ICO = {
+  foundry: pix(['..#####..','.#.....#.','#.c.c.c.#','#..c.c..#','#.c.c.c.#','.#.....#.','..#####..']),
+  deploy: pix(['.#######.','.#..c..#.','.#.ccc.#.','.#..c..#.','.#######.','#########','#.c.c.c.#','#########']),
+  mine: pix(['.#######.','#.......#','#....####','#....#c##','#....####','#.......#','.#######.']),
+  market: pix(['.#.#.#.#.','#########','.#.ccc.#.','##.ccc.##','.#.ccc.#.','#########','.#.#.#.#.']),
+  rent: pix(['.###.....','#...#....','#.c.#####','#...#.#.#','.###.....']),
+  how: pix(['###...###','#c##.##c#','#..#.#..#','#.##.##.#','#..#.#..#','###.#.###']),
+  docs: pix(['######..','#....##.','#.cc..##','#......#','#.####.#','#......#','#.####.#','########']),
+  coin: pix(['..###..','.#ccc#.','#cc#cc#','#c###c#','#cc#cc#','.#ccc#.','..###..']),
+  wafer: pix(['..#####..','.#c.c.c#.','#.c.c.c.#','#c.c.c.c#','#.c.c.c.#','.#c.c.c#.','..##.##..']),
+  design: pix(['#########','#c..#...#','#.c.#.c.#','#..c#c..#','#####...#','#...#...#','#########']),
+  gavel: pix(['##.....','###....','.###...','..##.#.','...###.','....###','.....##'])
+};
+
+/* ---------- state ---------- */
+const KEY = 'fabricate-state-v1', KEYW = 'fabricate-wallet-v1';
+let S, fById = new Map();
+function reindex(){ fById = new Map(S.fab.map(f => [f.id, f])); }
+function feedPush(x){ x.t = S.t; S.feed.unshift(x); if (S.feed.length > 60) S.feed.length = 60; }
+const hourly = f => f.rv / Math.max(6, Math.min(168, (S.t - f.t) / HOUR));
+const fair = (f, share) => r50(0.75 * share * Math.max(hourly(f), 0.0015 * slotsOf(f)) / price());
+const opIsUser = f => f.rent ? f.rent.user : f.user;
+const inAuction = f => S.auc.some(a => a.f === f.id);
+
+function addOther(r){
+  const n = S.fab.length + 1; if (n > CFG.SUPPLY) return;
+  const fee = mintPrice(n), x = r(), node = x < 0.45 ? 0 : x < 0.72 ? 1 : x < 0.88 ? 2 : x < 0.97 ? 3 : 4;
+  const f = { id: n, owner: randAddr(r), node, litho: 1 + Math.min(4, Math.floor(r() * r() * 5)), yld: 1 + Math.min(4, Math.floor(r() * r() * 5)), auto: true,
+    next: S.t + r() * CFG.WAFER_H * HOUR, live: 0, count: 0, wafers: 0, unclaimed: 0, rentUn: 0, own: 0, life: 0, rv: 0, j: [], user: false, list: null, rent: null, t: S.t };
+  if (r() < 0.1) f.list = { share: pick([0.5, 0.6, 0.7, 0.8], r), k: 0.8 + r() * 0.6, price: 0 };
+  let burnTok = NODES[node].cost; for (const k of ['litho', 'yld']) for (let l = 1; l < f[k]; l++) burnTok += UP[k].cost(l);
+  S.burnSol += fee * 0.5; S.burned += fee * 0.5 / price() + burnTok; S.ops += fee * 0.5;
+  S.fab.push(f); fById.set(f.id, f);
+  if (f.list) f.list.price = r50(fair(f, f.list.share) * f.list.k);
+}
+function makeChip(f, wafer, r = Math.random){
+  const avail = TYPES.filter(t => t.node <= f.node);
+  const t = r() < 0.5 ? avail[avail.length - 1] : pick(avail, r);
+  const pa = 0.15 + 0.05 * (f.yld - 1), pc = Math.max(0.1, 0.35 - 0.05 * (f.yld - 1)), x = r();
+  const grade = x < pa ? 'A' : x < 1 - pc ? 'B' : 'C';
+  const a = pick(NARR.a, r), b = pick(NARR.b, r);
+  return { id: S.nextChip++, fab: f.id, type: t.k, grade, tick: (a.slice(0, 4) + b.slice(0, 1 + Math.floor(r() * 3))).toUpperCase(), F: Math.exp(t.mu + t.sd * gauss(r)) * GRADES[grade], t: S.t, wafer, price: 0 };
+}
+function launchChip(f, c){
+  const coin = { id: S.nextCoin++, fab: f.id, type: c.type, grade: c.grade, tick: c.tick, t0: S.t, F: c.F, L: Math.exp(Math.log(120) + 0.9 * gauss()), fees: 0, alive: true, grad: false };
+  coin.gradAt = coin.F > 5 ? coin.F * 0.3 : -1;
+  S.coins.push(coin); f.live++; f.count++; f.j.unshift(coin.id); if (f.j.length > 64) f.j.length = 64;
+  feedPush({ k: 'launch', f: f.id, tick: coin.tick, type: c.type, grade: c.grade }); S.ver++;
+  if (opIsUser(f) && S.speed <= 60) toast(`Fab #${f.id} launched chip $${coin.tick}`);
+}
+function fabricate(f){
+  f.wafers++; S.wafers++;
+  const wid = S.nextWafer++, chips = Array.from({ length: perWafer(f) }, () => makeChip(f, wid));
+  chips.sort((a, b) => GRADES[b.grade] - GRADES[a.grade]);
+  if (opIsUser(f)) {
+    let launched = 0;
+    for (const c of chips) {
+      if (f.auto && f.live < slotsOf(f)) { launchChip(f, c); launched++; }
+      else { c.owner = W.addr; S.tray.push(c); }
+    }
+    S.ver++;
+    if (S.speed <= 60) toast(`Fab #${f.id} finished a wafer of ${chips.length} chips${launched ? `, launched ${launched}` : ''}. The rest are in your tray.`);
+  } else {
+    for (const c of chips) {
+      if (f.live < slotsOf(f)) launchChip(f, c);
+      else if (Math.random() < 0.08) { c.price = r50(chipValue(c) * (0.8 + Math.random() * 0.6)); c.owner = randAddr(Math.random); S.mkt.push(c); }
+    }
+  }
+}
+function pay(c, fee){
+  c.fees += fee;
+  S.burnSol += fee * CFG.BURN; S.burned += fee * CFG.BURN / price(); S.ops += fee * CFG.OPS;
+  const f = fById.get(c.fab); if (!f) return;
+  const op = fee * CFG.OPER, renter = f.rent ? op * f.rent.share : 0;
+  f.rentUn += renter; f.unclaimed += op - renter; f.own += op - renter; f.life += op; f.rv += op;
+}
+function startRent(f, who, isUser, hours, cost, share){
+  f.rent = { who, user: isUser, until: S.t + hours * HOUR, share, hours }; f.rentUn = 0;
+  S.burned += cost * CFG.RENT_BURN;
+  if (f.user && !isUser) { S.wal.fab += cost * CFG.RENT_OWNER; toast(`Fab #${f.id} rented for ${hours === 1 ? '1 hour' : hours === 24 ? '1 day' : '1 week'}: +${fmtTok(cost * CFG.RENT_OWNER)} $FABRICATE`); }
+  S.ver++;
+}
+function endRent(f){
+  if (f.rent.user && f.rentUn > 0) { S.wal.sol += f.rentUn; toast(`Rental of fab #${f.id} ended. ${fmtSol(f.rentUn)} SOL settled to your wallet.`); }
+  f.rentUn = 0; f.rent = null; S.ver++;
+}
+function spawnAuction(){
+  const pool = S.fab.filter(f => !f.user && !f.rent && !f.list && !inAuction(f)).sort((a, b) => hourly(b) - hourly(a)).slice(0, 10);
+  if (!pool.length) return;
+  const f = pick(pool), start = r50(fair(f, 0.7) * 24 * 0.55);
+  S.auc.push({ a: S.nextA++, f: f.id, bid: start, start, bidder: null, ends: S.t + (1.5 + Math.random() * 2.5) * HOUR, share: 0.7 }); S.ver++;
+}
+function step(dm){
+  const t0 = S.t; S.t += dm * 60;
+  if (S.fab.length < CFG.SUPPLY && Math.random() < dm * CFG.OTHER_RATE) { addOther(Math.random); S.ver++; }
+  for (const f of S.fab) {
+    if (f.rent && S.t >= f.rent.until) endRent(f);
+    if (f.list && !f.rent && !inAuction(f) && Math.random() < dm / 1100 * Math.max(0.05, Math.min(3, fair(f, f.list.share) / f.list.price))) {
+      const x = Math.random(), d = DURS[x < 0.5 ? 0 : x < 0.9 ? 1 : 2]; startRent(f, randAddr(Math.random), false, d.h, f.list.price * d.h * (1 - d.off), f.list.share);
+    }
+    if (S.t >= f.next) { f.next = S.t + waferInt(f); fabricate(f); }
+  }
+  for (const c of S.coins) {
+    if (!c.alive) continue;
+    const a0 = Math.max(0, (t0 - c.t0) / 60), a1 = Math.max(0, (S.t - c.t0) / 60);
+    const fee = c.F * (Math.exp(-a0 / c.L) - Math.exp(-a1 / c.L));
+    if (fee > 0) pay(c, fee);
+    if (!c.grad && c.gradAt > 0 && c.fees >= c.gradAt) { c.grad = true; S.ver++; }
+    if (a1 > 3 * c.L) { c.alive = false; const f = fById.get(c.fab); if (f) f.live = Math.max(0, f.live - 1); S.ver++; }
+  }
+  // chip market: buyers and expiry
+  const keepM = [];
+  for (const c of S.mkt) { if (S.t - c.t > CFG.CHIP_TTL) { S.ver++; continue; } if (Math.random() < dm / 400 * Math.max(0.05, Math.min(3, chipValue(c) / c.price))) { S.burned += c.price * CFG.SALE_ROYALTY; S.ver++; continue; } keepM.push(c); }
+  S.mkt = keepM.slice(-12);
+  const keepT = [];
+  for (const c of S.tray) {
+    if (S.t - c.t > CFG.CHIP_TTL) { toast(`Chip design $${c.tick} went stale and was recycled`); S.ver++; continue; }
+    if (c.price > 0 && Math.random() < dm / 300 * Math.max(0.05, Math.min(3, chipValue(c) / c.price))) { S.burned += c.price * CFG.SALE_ROYALTY; S.wal.fab += c.price * (1 - CFG.SALE_ROYALTY); toast(`Chip design $${c.tick} sold for ${fmtTok(c.price)} $FABRICATE`); S.ver++; continue; }
+    keepT.push(c);
+  }
+  S.tray = keepT;
+  const decay = Math.exp(-dm * 60 / (7 * DAY));
+  for (const f of S.fab) f.rv *= decay;
+  for (const a of S.auc) {
+    if (S.t < a.ends && Math.random() < dm / 40) {
+      const nb = r50(Math.max(a.start, a.bid * (1.06 + Math.random() * 0.08)));
+      if (nb <= fair(fById.get(a.f), a.share) * 24 * 1.25) { if (a.bidder === 'you') { S.wal.fab += a.bid; toast(`You were outbid on fab #${a.f}`); } a.bid = nb; a.bidder = randAddr(Math.random); S.ver++; }
+    }
+  }
+  for (const a of S.auc.filter(a => S.t >= a.ends)) {
+    const f = fById.get(a.f);
+    if (a.bidder && f && !f.rent) { startRent(f, a.bidder === 'you' ? W.addr : a.bidder, a.bidder === 'you', 24, a.bid, a.share); if (a.bidder === 'you') toast(`You won the production slots on fab #${f.id} for 24 hours.`); }
+    else if (a.bidder === 'you') S.wal.fab += a.bid;
+    S.auc = S.auc.filter(x => x !== a); S.ver++;
+  }
+  while (S.auc.length < 1) { const before = S.auc.length; spawnAuction(); if (S.auc.length === before) break; }
+  if (Math.floor(S.t / HOUR) !== Math.floor(t0 / HOUR)) {
+    S.coins = S.coins.filter(c => c.alive || c.grad || c.t0 > S.t - 10 * HOUR || fById.get(c.fab)?.user);
+    for (const f of S.fab) if (f.list && !f.user) f.list.price = r50(fair(f, f.list.share) * f.list.k);
+  }
+}
+function advance(minutes){ while (minutes > 0) { const d = Math.min(5, minutes); step(d); minutes -= d; } }
+function newWorld(){
+  S = { v: 1, t: CFG.START_T - 2 * DAY, speed: 60, fab: [], coins: [], tray: [], mkt: [], feed: [], auc: [], burned: 0, burnSol: 0, ops: 0, wafers: 0, wal: { sol: 30, fab: 250000 }, nextCoin: 1, nextChip: 1, nextWafer: 1, nextA: 1, ver: 0 };
+  fById = new Map();
+  const r = mulberry(97);
+  for (let i = 0; i < 38; i++) addOther(r);
+  advance(2 * 24 * 60);
+  S.feed = S.feed.slice(0, 40);
+}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function load(){
+  try { const raw = localStorage.getItem(KEY); if (raw) { const s = JSON.parse(raw); if (s && s.v === 1 && Array.isArray(s.fab)) { S = s; reindex(); return; } } } catch (e) {}
+  newWorld();
+}
+
+/* ---------- wallet (Wallet Standard + injected providers, validated with @solana/web3.js) ---------- */
+const W = { list: [], addr: null, name: null, entry: null, kind: null, balance: null };
+const isMine = f => !!(f && f.user && W.addr && f.owner === W.addr);
+const isRenting = f => !!(f && f.rent && f.rent.user && W.addr && f.rent.who === W.addr);
+function addWallet(x){ if (!W.list.some(w => w.name.toLowerCase() === x.name.toLowerCase())) W.list.push(x); }
+const wsApi = { register: (...ws) => { ws.forEach(w => { try { if (w.features && w.features['standard:connect'] && (w.chains || []).some(c => String(c).startsWith('solana:'))) addWallet({ name: w.name, icon: w.icon, kind: 'standard', w }); } catch (e) {} }); return () => {}; } };
+try {
+  window.addEventListener('wallet-standard:register-wallet', ev => { try { ev.detail(wsApi); } catch (e) {} });
+  window.dispatchEvent(new CustomEvent('wallet-standard:app-ready', { detail: wsApi }));
+} catch (e) {}
+function detectInjected(){
+  const c = [['Phantom', window.phantom && window.phantom.solana], ['Solflare', window.solflare], ['Backpack', window.backpack], ['Solana wallet', window.solana]];
+  for (const [n, p] of c) {
+    if (!p || typeof p.connect !== 'function') continue;
+    const name = p.isPhantom ? 'Phantom' : p.isSolflare ? 'Solflare' : n;
+    if (!W.list.some(w => w.name.toLowerCase().startsWith(name.toLowerCase()))) addWallet({ name, icon: null, kind: 'injected', p });
+  }
+}
+function validAddr(a){
+  try { if (window.solanaWeb3 && solanaWeb3.PublicKey) return new solanaWeb3.PublicKey(a).toBase58(); } catch (e) { return null; }
+  return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a) ? a : null;
+}
+async function connectEntry(entry, silent){
+  let addr = null;
+  if (entry.kind === 'standard') {
+    const w = entry.w;
+    if (silent) { if (w.accounts && w.accounts.length) addr = w.accounts[0].address; else return false; }
+    else { const r = await w.features['standard:connect'].connect(); const acc = (r && r.accounts && r.accounts.length ? r.accounts : w.accounts)[0]; addr = acc && acc.address; }
+    try { w.features['standard:events'] && w.features['standard:events'].on('change', ({ accounts }) => { if (accounts && accounts.length) setWallet(accounts[0].address, entry); else clearWallet(); }); } catch (e) {}
+  } else {
+    const p = entry.p;
+    const r = await p.connect(silent ? { onlyIfTrusted: true } : undefined);
+    const pk = (r && r.publicKey) || p.publicKey; addr = pk && pk.toString();
+    try { p.on && p.on('accountChanged', pk => { if (pk) setWallet(pk.toString(), entry); else clearWallet(); }); } catch (e) {}
+  }
+  if (!addr) throw new Error('The wallet returned no account.');
+  setWallet(addr, entry);
+  return true;
+}
+function setWallet(addr, entry){
+  const ok = validAddr(addr);
+  if (!ok) { toast('That wallet returned an invalid Solana address.'); return; }
+  W.addr = ok; W.name = entry ? entry.name : 'Guest wallet'; W.entry = entry || null; W.kind = entry ? entry.kind : 'guest'; W.balance = null;
+  try { localStorage.setItem(KEYW, JSON.stringify({ name: W.name, kind: W.kind, addr: W.kind === 'guest' ? W.addr : null })); } catch (e) {}
+  for (const f of S.fab) { if (f.user) f.owner = W.addr; if (f.rent && f.rent.user) f.rent.who = W.addr; }
+  for (const c of S.tray) c.owner = W.addr;
+  paintWallet(); S.ver++; render(true);
+  if (W.kind !== 'guest') fetchBalance();
+}
+async function fetchBalance(){
+  if (!window.solanaWeb3 || !W.addr) return;
+  try {
+    const conn = new solanaWeb3.Connection(CFG.RPC, 'confirmed');
+    const lamports = await Promise.race([conn.getBalance(new solanaWeb3.PublicKey(W.addr)), new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 6000))]);
+    W.balance = lamports / solanaWeb3.LAMPORTS_PER_SOL;
+  } catch (e) { W.balance = 'unavailable'; }
+  paintWallet();
+}
+async function clearWallet(){
+  const e = W.entry;
+  try { if (e && e.kind === 'standard' && e.w.features['standard:disconnect']) await e.w.features['standard:disconnect'].disconnect(); if (e && e.kind === 'injected' && e.p.disconnect) await e.p.disconnect(); } catch (err) {}
+  Object.assign(W, { addr: null, name: null, entry: null, kind: null, balance: null });
+  try { localStorage.removeItem(KEYW); } catch (err) {}
+  $('#walletMenu').hidden = true; paintWallet(); S.ver++; render(true);
+}
+function paintWallet(){
+  const b = $('#walletBtn');
+  if (W.addr) { b.className = 'btn connected'; b.innerHTML = `<i class="dot"></i><span>${short(W.addr)}</span>`; b.setAttribute('aria-label', `Wallet ${W.addr}, open menu`); }
+  else { b.className = 'btn cy'; b.innerHTML = `<i class="dot"></i><span>Connect wallet</span>`; b.setAttribute('aria-label', 'Connect wallet'); }
+  if (W.addr) {
+    const bal = W.kind === 'guest' ? fmtSol(S.wal.sol) + ' SOL' : W.balance == null ? 'Checking…' : W.balance === 'unavailable' ? 'Unavailable' : fmtSol(W.balance) + ' SOL';
+    $('#walletMenu').innerHTML = `<div class="rows"><div><label>Wallet</label><b>${esc(W.name)}</b></div><div><label>Address</label><b>${short(W.addr)}</b></div><div><label>Balance</label><b>${bal}</b></div><div><label>$FABRICATE</label><b>${fmtTok(S.wal.fab)}</b></div></div>
+      <div class="mitems"><button data-act="copyAddr">Copy address</button>${W.kind !== 'guest' ? `<a href="https://solscan.io/account/${W.addr}" target="_blank" rel="noopener">View on Solscan</a>` : ''}<button data-act="disconnect">Disconnect</button></div>`;
+  }
+}
+function openWalletModal(){
+  detectInjected();
+  const items = W.list.map((w, i) => `<button class="wopt" data-act="pickWallet" data-i="${i}">${w.icon ? `<img src="${esc(w.icon)}" alt="">` : `<span class="ph-ico"></span>`}<span>${esc(w.name)}</span><em>Detected</em></button>`).join('');
+  modal(`<section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="wt">
+    <h2 class="ph" id="wt">${ICO.mine} Connect a Solana wallet <button class="x" data-act="close" aria-label="Close">×</button></h2>
+    <div class="wlist">
+      ${items || `<p class="small" style="margin:0">No Solana wallet found in this browser. Install one, then reload this page.</p>
+        <a class="wopt" href="https://phantom.app/download" target="_blank" rel="noopener"><span class="ph-ico"></span>Get Phantom</a>
+        <a class="wopt" href="https://solflare.com/download" target="_blank" rel="noopener"><span class="ph-ico"></span>Get Solflare</a>
+        <a class="wopt" href="https://backpack.app/downloads" target="_blank" rel="noopener"><span class="ph-ico"></span>Get Backpack</a>`}
+      <button class="wopt" data-act="guestWallet"><span class="ph-ico" style="background:var(--cy)"></span><span>Continue as guest</span></button>
+      <p class="small" style="margin:4px 0 0">Connecting shares your public address only.</p>
+    </div></section>`);
+}
+async function eagerConnect(){
+  let saved = null; try { saved = JSON.parse(localStorage.getItem(KEYW) || 'null'); } catch (e) {}
+  if (!saved) return;
+  if (saved.kind === 'guest' && saved.addr) { setWallet(saved.addr, null); return; }
+  detectInjected();
+  const entry = W.list.find(w => w.name === saved.name);
+  if (entry) { try { await connectEntry(entry, true); } catch (e) {} }
+}
+
+/* ---------- the wafer ---------- */
+function waferSVG(){
+  const C = 100, R = 92, D = 9, G = 1, N = 20, off = C - N * (D + G) / 2 + G / 2;
+  const cells = [];
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+    const px = off + x * (D + G), py = off + y * (D + G);
+    const far = Math.max(...[[px, py], [px + D, py], [px, py + D], [px + D, py + D]].map(([a, b]) => Math.hypot(a - C, b - C)));
+    if (far < R - 2 && py + D < C + R - 8) cells.push([px, py, Math.hypot(px + D / 2 - C, py + D / 2 - C)]);
+  }
+  cells.sort((a, b) => a[2] - b[2]);
+  const coins = S.coins.slice(-cells.length).reverse();
+  let s = `<svg class="wafer" viewBox="0 0 200 200" shape-rendering="crispEdges" role="img" aria-label="A silicon wafer. Each die is a chip launched as a coin, coloured by chip type; the newest chips sit at the centre.">`;
+  s += `<circle cx="${C}" cy="${C}" r="${R + 4}" fill="#9AA3A9"/><circle cx="${C}" cy="${C}" r="${R + 2}" fill="#20252A"/><rect x="${C - 12}" y="${C + R - 3}" width="24" height="8" style="fill:var(--panel)"/>`;
+  cells.forEach(([x, y], i) => {
+    const c = coins[i];
+    if (!c) { s += `<rect x="${x}" y="${y}" width="${D}" height="${D}" fill="#2C3237"/>`; return; }
+    const t = TYPES.find(q => q.k === c.type);
+    const fill = c.alive ? t.col : '#4A535A';
+    s += `<rect class="d" x="${x}" y="${y}" width="${D}" height="${D}" fill="${fill}"${c.grad ? ' stroke="#FFFFFF" stroke-width=".8"' : ''}><title>$${esc(c.tick)}: ${t.name} chip, grade ${c.grade}, fab #${c.fab} (${c.grad ? 'graduated' : c.alive ? 'trading' : 'quiet'})</title></rect>`;
+    if (c.alive) s += `<rect x="${x + 3}" y="${y + 3}" width="3" height="3" fill="#0E2A2E" opacity=".55"/>`;
+  });
+  s += `<defs><clipPath id="wclip"><circle cx="${C}" cy="${C}" r="${R + 1}"/></clipPath></defs><g clip-path="url(#wclip)" style="pointer-events:none"><g class="scan"><rect x="${C - R}" y="${C - R}" width="${2 * R}" height="2" fill="#E9FDFF" opacity=".55"/></g></g>`;
+  return s + '</svg>';
+}
+
+/* ---------- views ---------- */
+const TABS = [['foundry','Foundry',ICO.foundry],['deploy','Deploy a fab',ICO.deploy],['mine','My fabs',ICO.mine],['market','Chip market',ICO.market],['rentals','Rentals',ICO.rent],['how','How it works',ICO.how],['docs','Docs',ICO.docs]];
+let tab = 'foundry';
+const M = { sort: 'value', dur: 1 };
+const LST = { id: 0, share: 0.7, mult: 1 };
+const SL = { id: 0, mult: 1 };
+const myF = () => W.addr ? S.fab.filter(isMine) : [];
+const myRent = () => W.addr ? S.fab.filter(isRenting) : [];
+const freeFab = () => [...myRent(), ...myF().filter(f => !f.rent)].find(f => f.live < slotsOf(f));
+const unTotal = () => myF().reduce((a, f) => a + f.unclaimed, 0) + myRent().reduce((a, f) => a + f.rentUn, 0);
+const LIVE = {
+  burned: () => fmtTok(S.burned),
+  live: () => String(S.coins.filter(c => c.alive).length),
+  un: id => fmtSol(fById.get(+id)?.unclaimed) + ' SOL',
+  own: id => fmtSol(fById.get(+id)?.own) + ' SOL',
+  rentUn: id => fmtSol(fById.get(+id)?.rentUn) + ' SOL',
+  next: id => { const f = fById.get(+id); return f ? left(f.next) : ''; },
+  myUn: () => fmtSol(unTotal()) + ' SOL',
+  claimAll: () => 'Collect all · ' + fmtSol(unTotal()) + ' SOL',
+  ago: t => ago(+t),
+  left: t => left(+t)
+};
+function kv(label, val, k){ return `<div><label>${label}</label><b${k ? ` data-k="${k}"` : ''}>${val}</b></div>`; }
+
+let latestSnap = null, latestAt = 0;
+function vFoundry(){
+  const n = S.fab.length, nn = Math.min(n + 1, CFG.SUPPLY), on = Math.round(n / CFG.SUPPLY * 50);
+  const nowR = performance.now();
+  if (!latestSnap || nowR - latestAt > 30000) { latestSnap = S.feed.filter(f => f.k === 'launch').slice(0, 6); latestAt = nowR; }
+  return `<div class="grid-hero"><div class="col">
+  <section class="panel">
+    <h2 class="ph">${ICO.foundry} Status <small>the foundry right now</small></h2>
+    <div class="pad">
+      <label>Fabs deployed</label>
+      <div class="big"><b>${n}</b><span>/ ${CFG.SUPPLY.toLocaleString('en-US')}</span></div>
+      <div class="ticks" aria-hidden="true">${Array.from({ length: 50 }, (_, i) => `<i class="${i < on ? 'on' : ''}${i === on - 1 ? ' last' : ''}"></i>`).join('')}</div>
+      <div class="kv4">
+        ${kv('Deploy price', n >= CFG.SUPPLY ? 'Sold out' : fmtSol(mintPrice(nn)) + ' SOL')}
+        ${kv('Chips trading', S.coins.filter(c => c.alive).length, 'live')}
+        ${kv('Wafers fabricated', S.wafers)}
+        ${kv('$FABRICATE burned', fmtTok(S.burned), 'burned')}
+      </div>
+      <button class="btn cy wide" data-go="deploy">Deploy a fab</button>
+    </div>
+  </section>
+  <section class="panel">
+    <h2 class="ph">${ICO.coin} $FABRICATE <small>token</small></h2>
+    <div class="kv2"><div><label>Project</label><b>Fabricate</b></div><div><label>Ticker</label><b>$FABRICATE</b></div></div>
+    ${CFG.X ? `<div class="btnrow"><a class="btn" href="${esc(CFG.X)}" target="_blank" rel="noopener">Follow @FabricateRent on X</a></div>` : ''}
+  </section>
+  </div>
+  <section class="panel hero">
+    <h2 class="ph">${ICO.wafer} The wafer <small>every chip launched across the foundry, newest at the centre</small></h2>
+    <div class="hero-copy">
+      <h1>Design chips. Fabricate silicon. <em>Manufacture tokens.</em></h1>
+      <p>Each fab is an NFT running an autonomous foundry. It fabricates wafers of virtual chips, launches each chip as a coin on pump.fun with its own ticker and AI agent, and routes the creator fees back to the fab.</p>
+      <div class="legend">${TYPES.map(t => `<span><i style="background:${t.col}"></i>${t.name}</span>`).join('')}<span><i style="background:#4A535A"></i>Gone quiet</span><span><i style="background:#2C3237;outline:1px solid #FFF"></i>Graduated (outlined)</span></div>
+    </div>
+    <div class="waferwrap">${waferSVG()}</div>
+  </section>
+  </div>
+  <section class="panel mt">
+    <h2 class="ph">${ICO.docs} Latest launches <small>chips the fabs just launched</small><button class="link end" data-go="market">Chip market</button></h2>
+    ${latestSnap.length ? `<div class="feed">${latestSnap.map(x => `<div>${chipIcon(x.type, x.grade)}<b>$${esc(x.tick)}</b><p>${TYPES.find(t => t.k === x.type).name} chip · fab #${x.f}</p><span class="ago" data-k="ago:${x.t}">${ago(x.t)}</span></div>`).join('')}</div>`
+      : `<div class="empty">${fabTile()}<span>No launches yet.</span></div>`}
+  </section>
+  <section class="panel mt">
+    <h2 class="ph">${ICO.how} How it works <small>six steps</small><button class="link end" data-go="how">All the rules</button></h2>
+    ${stepsHTML()}
+  </section>`;
+}
+function stepsHTML(){
+  const st = [
+    [fabTile(), 'Deploy a chip fab', 'Buy a virtual semiconductor fab, a tradable NFT.'],
+    [ICO.design, 'Design chips', 'AI agents design chip architectures for automation, trading, analytics and agents.'],
+    [ICO.wafer, 'Fabricate wafers', 'The fab produces wafers, each holding a batch of virtual chips.'],
+    [chipIcon('trade', 'A'), 'Launch chips', 'Each chip can launch on pump.fun as its own coin, with a ticker, identity and AI agent.'],
+    [ICO.coin, 'Collect creator fees', '60% of every chip-backed coin’s creator fees routes to its parent fab.'],
+    [ICO.deploy, 'Scale production', 'Reinvest in better process nodes, faster lithography and higher yields.']
+  ];
+  return `<div class="steps">${st.map((x, i) => `<div>${x[0]}<span class="n">${pad2(i + 1)}</span><h3>${x[1]}</h3><p>${x[2]}</p></div>`).join('')}</div>`;
+}
+
+function vDeploy(){
+  const n = S.fab.length + 1, fee = mintPrice(n), soldOut = n > CFG.SUPPLY, can = W.addr && !soldOut && S.wal.sol >= fee;
+  return `<div class="grid-2"><div class="col">
+  <section class="panel step">
+    <h2 class="ph"><b>Process nodes</b> <small>upgrade any time</small></h2>
+    <div class="pad"><h3>What a fab can make</h3>
+      <p>Every fab starts at 28nm. Each node shrink unlocks more advanced chips, adds a production slot (a chip that can trade at once) and puts two more chips on every wafer.</p>
+      <div class="nodes">${NODES.map((nd, i) => `<div><b>${nd.n}</b><span>${nd.cap}</span><dl><dt>Slots</dt><dd>${nd.slots}</dd><dt>Chips/wafer</dt><dd>${4 + 2 * i}</dd><dt>Upgrade</dt><dd>${nd.cost ? fmtTok(nd.cost) : 'Included'}</dd></dl></div>`).join('')}</div>
+      <p class="note">Process nodes are fictional in-game tiers, not claims of manufacturing physical semiconductors. Advanced chips swing harder both ways; they don’t raise the average.</p>
+    </div>
+  </section>
+  <section class="panel step">
+    <h2 class="ph"><b>Deploy</b> <small>${fmtSol(fee)} SOL</small><span class="tag cy end">Now</span></h2>
+    <div class="pad"><h3>${soldOut ? 'All 1,000 fabs are deployed' : `Deploy fab #${n}`}</h3>
+      <p>${soldOut ? 'Fabs now change hands on Tensor and Magic Eden, or you can rent one.' : 'Half the price buys and burns $FABRICATE, half funds operations. Your first wafer comes off the line within the hour.'}</p>
+      ${!W.addr ? `<button class="btn dark" data-act="wallet">Connect wallet to deploy</button>`
+        : `<button class="btn dark" data-act="deploy" ${can ? '' : 'disabled'}>Deploy fab #${n}</button>${S.wal.sol < fee ? `<p class="warn" style="margin:12px 0 0">Not enough SOL in your wallet.</p>` : ''}`}
+    </div>
+  </section></div>
+  <aside class="col">
+    <section class="panel"><h2 class="ph">${ICO.deploy} You get <small>after deploying</small></h2>
+      <div class="youget">${fabArt({ live: 1, node: 0 })}<div><b>#${Math.min(n, CFG.SUPPLY)}</b><span>28nm fab<br>1 slot, 4 chips per wafer</span></div></div>
+    </section>
+    <section class="panel"><h2 class="ph">${ICO.coin} Summary <small>what moves</small></h2>
+      <div class="rows">
+        ${kv('Deploy price', fmtSol(fee) + ' SOL')}
+        ${kv('Starting node', '28nm')}
+        ${kv('Your share of fees', '60%')}
+        ${kv('Wallet SOL', fmtSol(S.wal.sol) + ' SOL')}
+        ${kv('Wallet $FABRICATE', fmtTok(S.wal.fab))}
+      </div>
+    </section>
+  </aside></div>`;
+}
+
+function chipCard(c, mode){
+  const t = TYPES.find(x => x.k === c.type), ff = freeFab(), exp = c.t + CFG.CHIP_TTL;
+  return `<div class="chipc"><div class="top2">${chipIcon(c.type, c.grade)}<div><h4>$${esc(c.tick)}</h4><span class="ty">${t.name} chip <span class="grade ${c.grade}">${c.grade}</span></span></div></div>
+    <dl><dt>From</dt><dd>Fab #${c.fab}</dd><dt>Design expires</dt><dd data-k="left:${exp}">${left(exp)}</dd>${c.price ? `<dt>Price</dt><dd>${fmtTok(c.price)} $FAB</dd>` : `<dt>Design value</dt><dd>≈ ${fmtTok(chipValue(c))} $FAB</dd>`}</dl>
+    <div class="btns">${mode === 'tray'
+      ? `<button class="btn sm cy" data-act="launch" data-c="${c.id}" ${ff ? '' : 'disabled'}>${ff ? 'Launch via #' + ff.id : 'No free slot'}</button>${c.price ? `<button class="btn sm" data-act="unsell" data-c="${c.id}">Unlist</button>` : `<button class="btn sm" data-act="sellOpen" data-c="${c.id}">Sell</button>`}<button class="btn sm" data-act="recycle" data-c="${c.id}">Recycle</button>`
+      : !W.addr ? `<button class="btn sm" data-act="wallet">Connect wallet</button>` : `<button class="btn sm cy" data-act="buyChip" data-c="${c.id}" ${S.wal.fab < c.price ? 'disabled' : ''}>Buy · ${fmtTok(c.price)}</button>`}</div></div>`;
+}
+function upRow(f, k){
+  const u = UP[k], l = f[k], max = l >= u.max, cost = u.cost(l);
+  return `<div class="up"><b>${u.name}<span class="pips">${Array.from({ length: u.max }, (_, i) => `<i class="${i < l ? 'on' : ''}"></i>`).join('')}</span></b><small>${max ? 'Maxed out' : u.eff}</small><button class="btn sm" data-act="upgrade" data-id="${f.id}" data-k="${k}" ${max || S.wal.fab < cost ? 'disabled' : ''}>${max ? 'Maxed' : 'Upgrade · ' + fmtTok(cost)}</button></div>`;
+}
+function vMine(){
+  if (!W.addr) return `<section class="panel"><h2 class="ph">${ICO.mine} My fabs</h2>
+    <div class="empty">${fabTile()}<span>Connect a wallet to see your fabs and their wafers.</span><button class="btn cy" data-act="wallet">Connect wallet</button></div></section>`;
+  const mine = myF(), rented = myRent(), tray = S.tray.slice().sort((a, b) => b.t - a.t);
+  const ff = freeFab();
+  return `<section class="panel"><h2 class="ph">${ICO.mine} My fabs <small>revenue waits until you collect it</small></h2>
+    <div class="kv5">
+      <div><label>Fabs</label><b>${mine.length}</b></div>
+      <div><label>Rented</label><b>${rented.length}</b></div>
+      <div><label>Chips in tray</label><b>${tray.length}</b></div>
+      <div><label>Ready to collect</label><b class="g" data-k="myUn">${LIVE.myUn()}</b></div>
+      <div><label>$FABRICATE</label><b>${fmtTok(S.wal.fab)}</b></div>
+    </div>
+    <div class="actions">
+      <button class="btn cy" data-act="claimAll" data-k="claimAll">${LIVE.claimAll()}</button>
+      <button class="btn" data-act="launchBatch" ${tray.length && ff ? '' : 'disabled'}>Launch best chips into free slots</button>
+      <button class="btn" data-go="deploy">Deploy a fab</button>
+      <button class="btn" data-act="buyFab" ${S.wal.sol < 1 ? 'disabled' : ''}>Swap 1 SOL for $FABRICATE</button>
+    </div>
+  </section>
+  <section class="panel mt"><h2 class="ph">${ICO.wafer} Chip tray <small>launch, sell or recycle · designs expire after 24 h</small></h2>
+    ${tray.length ? `<div class="chips">${tray.map(c => chipCard(c, 'tray')).join('')}</div>` : `<div class="empty">${fabTile()}<span>No chips waiting. Chips that don’t fit a free slot land here when a wafer finishes.</span></div>`}
+  </section>
+  ${rented.length ? `<section class="panel mt"><h2 class="ph">${ICO.rent} Rented by you <small>wafers made during your rental are yours</small></h2>
+    ${rented.map(f => `<div class="frow"><div>${fabArt(f)}</div><div><h3>#${f.id} <span class="tag ghost">${NODES[f.node].n}</span></h3>
+      <div class="stats"><div><label>Time left</label><b data-k="left:${f.rent.until}">${left(f.rent.until)}</b></div><div><label>You keep</label><b>${Math.round(f.rent.share * 100)}%</b></div><div><label>Your revenue</label><b data-k="rentUn:${f.id}">${LIVE.rentUn(f.id)}</b></div><div><label>Next wafer</label><b data-k="next:${f.id}">${LIVE.next(f.id)}</b></div></div></div>
+      <div><p class="small" style="margin:0">Owner ${short(f.owner)} keeps the rest of the operator share and the rental payment.</p></div></div>`).join('')}
+  </section>` : ''}
+  <section class="panel mt"><h2 class="ph">${ICO.deploy} Your fabs <small>${mine.length}</small></h2>
+    ${mine.length ? mine.map(f => { const nx = NODES[f.node + 1];
+      return `<div class="frow"><div>${fabArt(f)}</div>
+      <div><h3>#${f.id} <span class="tag ghost">${NODES[f.node].n}</span></h3>
+        <div class="stats"><div><label>Slots in use</label><b>${f.live} / ${slotsOf(f)}</b></div><div><label>Next wafer</label><b data-k="next:${f.id}">${LIVE.next(f.id)}</b></div><div><label>Ready to collect</label><b data-k="un:${f.id}">${LIVE.un(f.id)}</b></div><div><label>Wafers / chips launched</label><b>${f.wafers} / ${f.count}</b></div></div>
+        <div class="btns"><button class="btn sm cy" data-act="claim" data-id="${f.id}">Collect</button></div>
+      </div>
+      <div>
+        <div class="rentbox">${f.rent ? `<b>Rented out</b><p>To ${short(f.rent.who)} for ${left(f.rent.until)} more. They keep ${Math.round(f.rent.share * 100)}% of the operator share.</p>`
+          : f.list ? `<b>Listed for rent</b><p>${fmtTok(f.list.price)} $FABRICATE an hour, renter keeps ${Math.round(f.list.share * 100)}%.</p><div class="btns"><button class="btn sm" data-act="listOpen" data-id="${f.id}">Edit</button><button class="btn sm" data-act="unlist" data-id="${f.id}">Unlist</button></div>`
+          : `<b>Not listed</b><p>Lease this fab’s production capacity to chip designers for $FABRICATE and a share of creator fees.</p><button class="btn sm cy" data-act="listOpen" data-id="${f.id}">List for rent</button>`}</div>
+        <div class="up"><b>Auto-launch</b><small>${f.auto ? 'Fills free slots with the best chips from each wafer.' : 'Every chip goes to your tray.'}</small><div class="seg"><button class="chip" data-act="setAuto" data-id="${f.id}" data-v="1" aria-pressed="${f.auto}">On</button><button class="chip" data-act="setAuto" data-id="${f.id}" data-v="0" aria-pressed="${!f.auto}">Off</button></div></div>
+        <div class="up"><b>Process node · ${NODES[f.node].n}</b><small>${nx ? `${nx.n}: ${nx.cap.toLowerCase()}, ${nx.slots} slots` : 'The most advanced node.'}</small>${nx ? `<button class="btn sm" data-act="node" data-id="${f.id}" ${S.wal.fab < nx.cost - NODES[f.node].cost ? 'disabled' : ''}>Shrink · ${fmtTok(nx.cost - NODES[f.node].cost)}</button>` : ''}</div>
+        ${upRow(f, 'litho')}${upRow(f, 'yld')}
+      </div></div>`; }).join('')
+      : `<div class="empty">${fabTile()}<span>None yet. Deploy one and its first wafer arrives within the hour.</span><button class="btn sm cy" data-go="deploy">Deploy a fab</button></div>`}
+  </section>`;
+}
+
+function vMarket(){
+  const list = S.mkt.slice().sort((a, b) => chipValue(b) / b.price - chipValue(a) / a.price);
+  return `<section class="panel"><h2 class="ph">${ICO.market} Chip market <small>unused chip designs from other fabs · ${list.length} for sale</small></h2>
+    <div class="pbody"><p>Fabs sell the chips they can’t launch. Buy a design and launch it through any fab you run with a free production slot. Designs lose value as they age and expire 24 hours after fabrication. Each sale burns a 5% royalty.</p></div>
+    ${list.length ? `<div class="chips" style="border-top:1px solid var(--rule)">${list.map(c => chipCard(c, 'market')).join('')}</div>` : `<div class="empty">${fabTile()}<span>No chip designs for sale right now.</span></div>`}
+  </section>`;
+}
+
+function vRentals(){
+  const d = DURS[M.dur];
+  const list = S.fab.filter(f => f.list);
+  const sorters = { value: (a, b) => (b.list.share * hourly(b) / b.list.price) - (a.list.share * hourly(a) / a.list.price), price: (a, b) => a.list.price - b.list.price, node: (a, b) => b.node - a.node };
+  list.sort((a, b) => (!!a.rent - !!b.rent) || sorters[M.sort](a, b));
+  const segb = (key, val, label) => `<button class="chip" data-act="m" data-key="${key}" data-val="${val}" aria-pressed="${String(M[key]) === String(val)}">${label}</button>`;
+  const auctions = S.auc.map(a => {
+    const f = fById.get(a.f), mine = a.bidder === 'you', next = a.bidder ? r50(a.bid * 1.1) : a.bid;
+    return `<div class="auc">${fabArt(f)}<div><h4>Fab #${f.id}</h4><span class="small">${NODES[f.node].n} · ${slotsOf(f)} slots · ${perWafer(f)} chips per wafer · ${fmtSol(hourly(f))} SOL/h</span>
+      <label style="margin-top:12px">${mine ? 'Your bid is winning' : a.bidder ? 'Top bid' : 'Starting bid'}</label><div class="bid">${fmtTok(a.bid)} <small>$FABRICATE</small></div>
+      <p class="small" style="margin:0">24 h of production slots, renter keeps ${Math.round(a.share * 100)}% of the operator share. Ends in <span data-k="left:${a.ends}">${left(a.ends)}</span>.</p></div>
+      <div>${!W.addr ? `<button class="btn sm" data-act="wallet">Connect wallet to bid</button>` : mine ? `<button class="btn sm" disabled>You’re the top bidder</button>` : `<button class="btn cy" data-act="bid" data-a="${a.a}" ${S.wal.fab < next ? 'disabled' : ''}>Bid ${fmtTok(next)}</button>`}</div></div>`; }).join('');
+  return `<section class="panel"><h2 class="ph">${ICO.gavel} Production auction <small>a high-demand fab auctions its wafer slots</small></h2>
+    ${auctions || `<div class="empty">${fabTile()}<span>No auction running right now.</span></div>`}
+  </section>
+  <section class="panel mt"><h2 class="ph">${ICO.rent} Fabs for rent <small>${list.length} listed · manufacture chips without owning a fab</small></h2>
+    <div class="filters">
+      <div class="seg"><span>Rent for</span>${DURS.map((x, i) => segb('dur', i, x.name + (x.off ? ` (−${x.off * 100}%)` : ''))).join('')}</div>
+      <div class="seg"><span>Sort</span>${segb('sort','value','Best value')}${segb('sort','node','Most advanced')}${segb('sort','price','Price')}</div>
+    </div>
+    ${list.length ? `<div class="lists">${list.map(f => { const cost = f.list.price * d.h * (1 - d.off), mine = isMine(f);
+      return `<div class="lcard">${fabArt(f)}<div><h4>#${f.id}${mine ? '<span class="tag cy">Yours</span>' : ''}</h4>
+        <dl><dt>Node</dt><dd>${NODES[f.node].n}</dd><dt>Slots</dt><dd>${slotsOf(f)}</dd><dt>Revenue</dt><dd>${fmtSol(hourly(f))} SOL/h</dd><dt>Renter share</dt><dd>${Math.round(f.list.share * 100)}%</dd><dt>Price</dt><dd>${fmtTok(f.list.price)} /h</dd></dl>
+        ${f.rent ? `<button class="btn sm" disabled>Rented, back in ${left(f.rent.until)}</button>` : mine ? `<button class="btn sm" data-go="mine">Manage listing</button>`
+          : !W.addr ? `<button class="btn sm" data-act="wallet">Connect wallet</button>`
+          : `<button class="btn sm cy" data-act="rent" data-id="${f.id}" ${S.wal.fab < cost || inAuction(f) ? 'disabled' : ''}>Rent ${d.name} · ${fmtTok(cost)}</button>`}
+      </div></div>`; }).join('')}</div>` : `<div class="empty">${fabTile()}<span>No fabs listed right now.</span></div>`}
+  </section>`;
+}
+function listModal(id){
+  const f = fById.get(+id); if (!isMine(f)) return;
+  if (LST.id !== f.id) { LST.id = f.id; LST.share = f.list ? f.list.share : 0.7; LST.mult = 1; }
+  const p = r50(fair(f, LST.share) * LST.mult);
+  modal(`<section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="lt">
+    <h2 class="ph" id="lt">${ICO.rent} List fab #${f.id} for rent <button class="x" data-act="close" aria-label="Close">×</button></h2>
+    <div class="pad">
+      <label>Renter keeps</label>
+      <div class="seg" style="margin-bottom:16px">${[0.5,0.6,0.7,0.8].map(s => `<button class="chip" data-act="lsShare" data-v="${s}" aria-pressed="${LST.share === s}">${s * 100}%</button>`).join('')}</div>
+      <label>Hourly price</label>
+      <div class="seg" style="margin-bottom:16px">${[[0.8,'Fill fast'],[1,'Suggested'],[1.3,'Premium']].map(([m, t]) => `<button class="chip" data-act="lsMult" data-v="${m}" aria-pressed="${LST.mult === m}">${t}</button>`).join('')}</div>
+      <div class="rows" style="border:1px solid var(--rule);margin-bottom:16px">
+        ${kv('Price per hour', fmtTok(p) + ' $FABRICATE')}
+        ${kv('Per day / week', `${fmtTok(p * 24 * 0.9)} / ${fmtTok(p * 168 * 0.75)}`)}
+        ${kv('You receive', '90% of each payment, plus your fee share')}
+        ${kv('Burned', '10% of each payment')}
+      </div>
+      <button class="btn cy wide" data-act="listSave" data-id="${f.id}" data-p="${p}">${f.list ? 'Update listing' : 'List fab #' + f.id}</button>
+    </div></section>`);
+}
+function sellModal(id){
+  const c = S.tray.find(x => x.id === +id); if (!c) return;
+  if (SL.id !== c.id) { SL.id = c.id; SL.mult = 1; }
+  const p = r50(chipValue(c) * SL.mult);
+  modal(`<section class="panel modal" role="dialog" aria-modal="true" aria-labelledby="sl">
+    <h2 class="ph" id="sl">${ICO.market} Sell chip design $${esc(c.tick)} <button class="x" data-act="close" aria-label="Close">×</button></h2>
+    <div class="pad">
+      <label>Price</label>
+      <div class="seg" style="margin-bottom:16px">${[[0.8,'Sell fast'],[1,'Suggested'],[1.3,'Premium']].map(([m, t]) => `<button class="chip" data-act="slMult" data-v="${m}" aria-pressed="${SL.mult === m}">${t}</button>`).join('')}</div>
+      <div class="rows" style="border:1px solid var(--rule);margin-bottom:16px">
+        ${kv('Price', fmtTok(p) + ' $FABRICATE')}
+        ${kv('You receive', fmtTok(p * (1 - CFG.SALE_ROYALTY)) + ' $FABRICATE')}
+        ${kv('Royalty (burned)', '5%')}
+      </div>
+      <button class="btn cy wide" data-act="sellSave" data-c="${c.id}" data-p="${p}">List $${esc(c.tick)}</button>
+    </div></section>`);
+}
+
+function vHow(){
+  const sq = Array.from({ length: 100 }, (_, i) => `<i class="${i < 60 ? 'sq-a' : i < 85 ? 'sq-b' : 'sq-c'}"></i>`).join('');
+  return `<section class="panel"><h2 class="ph">${ICO.how} How it works <small>every fab is a token-launching business</small></h2>${stepsHTML()}</section>
+  <section class="panel mt"><h2 class="ph">${ICO.wafer} The chip fabrication cycle</h2>
+    <div class="cycle">
+      <div>${ICO.deploy}<b>Semiconductor foundry</b><span>Deploy an autonomous chip fab.</span></div>
+      <div>${ICO.wafer}<b>Silicon wafer</b><span>Each wafer carries a batch of virtual processors: automation, multi-agent, trading, analytics, AI agent and experimental chips.</span></div>
+      <div>${chipIcon('agent', 'A')}<b>Launch, sell or recycle</b><span>Launch chips as coins into free slots, sell unused designs to other operators, or recycle them.</span></div>
+      <div>${ICO.coin}<b>Creator fees</b><span>Fund more wafers, node shrinks and new fabs.</span></div>
+    </div>
+  </section>
+  <div class="two mt">
+    <section class="panel"><h2 class="ph">${ICO.deploy} Process nodes</h2>
+      <div class="tw"><table><thead><tr><th>Node</th><th>Capability</th><th class="r">Slots</th><th class="r">Upgrade</th></tr></thead><tbody>
+      ${NODES.map((n, i) => `<tr><td><b>${n.n}</b></td><td>${n.cap}</td><td class="r">${n.slots}</td><td class="r">${n.cost ? fmtTok(n.cost) : '—'}</td></tr>`).join('')}
+      </tbody></table></div>
+      <p class="note" style="margin:0 18px 18px">These are fictional in-game tiers, not claims of manufacturing physical semiconductors.</p>
+    </section>
+    <section class="panel"><h2 class="ph">${chipIcon('trade', 'B')} Chips</h2>
+      <div class="tw"><table><thead><tr><th></th><th>Chip</th><th class="r">From</th></tr></thead><tbody>
+      ${TYPES.map(t => `<tr><td>${chipIcon(t.k, 'B')}</td><td><b>${t.name}</b></td><td class="r">${NODES[t.node].n}</td></tr>`).join('')}
+      </tbody></table></div>
+      <p class="note" style="margin:0 18px 18px">Each chip gets a yield grade, A, B or C. Better grades start with more momentum; yield control upgrades make A more common.</p>
+    </section>
+  </div>
+  <section class="panel mt"><h2 class="ph">${ICO.coin} Where every creator fee goes <small>100 squares, one per percent</small></h2>
+    <div class="split"><div class="squares" aria-hidden="true">${sq}</div></div>
+    <div class="splitkeys">
+      <div><span class="k"><i class="sq-a"></i>The fab</span><b>60%</b><p>Its operator. Renters and owners split it at the negotiated share.</p></div>
+      <div><span class="k"><i class="sq-b"></i>Buy and burn</span><b>25%</b><p>A defined share that buys $FABRICATE and burns it.</p></div>
+      <div><span class="k"><i class="sq-c"></i>Operations</span><b>15%</b><p>Pays for the AI agents and the keeper.</p></div>
+    </div>
+  </section>
+  <section class="panel mt"><h2 class="ph">${ICO.rent} Fab rentals and production auctions</h2>
+    <div class="pbody"><p>Fab owners lease production capacity to chip designers for $FABRICATE by the hour, day or week, and set the share of creator fees the renter keeps. 90% of each payment goes to the owner and 10% is burned. Wafers made during a rental belong to the renter.</p>
+    <p>A high-demand fab auctions 24 hours of its production slots to the highest bidder.</p></div>
+  </section>
+  <section class="panel mt"><h2 class="ph">${ICO.foundry} The flywheel <small>it depends on real trading, rental demand and collected revenue</small></h2>
+    <div class="fly">
+      <div><b>More fabs deployed</b><span>Users buy and rent manufacturing capacity.</span></div>
+      <div><b>More chips manufactured</b><span>New chip-backed coins launch on pump.fun.</span></div>
+      <div><b>More creator fees</b><span>Revenue supports fab owners and protocol operations.</span></div>
+      <div><b>$FABRICATE buybacks and burns</b><span>A defined share of protocol revenue funds buybacks. Returns are not guaranteed.</span></div>
+    </div>
+  </section>`;
+}
+
+const DOCS = [
+  ['overview','Overview', () => `<p>Fabricate is a Solana launchpad where every chip fab is a token-launching business. Each <strong>fab</strong> is an NFT with its own production capacity, manufacturing history, rental market and creator-fee revenue. It fabricates <strong>wafers</strong> of virtual chips; each chip can launch on pump.fun as a coin with its own ticker, identity and AI agent, with the fab as creator.</p>
+    <p>Process nodes and chips are fictional in-game tiers, not claims of manufacturing physical semiconductors.</p>`],
+  ['deploying','Deploying', () => `<p>The deploy price rises evenly from 0.25 SOL for #1 to 1.25 SOL for #1,000: <code>0.25 + 1.0 × (n − 1) / 999</code>. Half buys and burns $FABRICATE, half funds operations. Every fab starts at 28nm.</p>
+    <div class="tw"><table><thead><tr><th>Fab</th><th class="r">Deploy price</th></tr></thead><tbody>${[1,250,500,750,1000].map(n => `<tr><td>#${n.toLocaleString('en-US')}</td><td class="r">${mintPrice(n).toFixed(3)} SOL</td></tr>`).join('')}</tbody></table></div>`],
+  ['wafers','Wafers and chips', () => `<p>A fab finishes a wafer every ${CFG.WAFER_H} hours, faster with lithography upgrades. Each wafer carries <code>4 + 2 × node level</code> chips of the types its node unlocks, each with a yield grade.</p>
+    <p>With auto-launch on, the best chips fill free production slots at once. The rest wait in your tray, where you can launch them later, sell the design on the chip market, or recycle it. Designs expire 24 hours after fabrication.</p>
+    <h4>Launch rules</h4><ul><li>No real people’s names or likeness, and no implied endorsement.</li><li>No existing brands, and no ticker that is already live on pump.fun.</li><li>No promises of returns, in the coin or from its AI agent.</li><li>Every coin description says which fab made it.</li></ul>`],
+  ['nodes','Process nodes', () => `<div class="tw"><table><thead><tr><th>Node</th><th>Capability</th><th class="r">Slots</th><th class="r">Upgrade</th></tr></thead><tbody>${NODES.map(n => `<tr><td>${n.n}</td><td>${n.cap}</td><td class="r">${n.slots}</td><td class="r">${n.cost ? fmtTok(n.cost) + ' $FABRICATE' : 'Included'}</td></tr>`).join('')}</tbody></table></div>
+    <p>Upgrades are paid in $FABRICATE and burned. Advanced chips have a wider spread of outcomes, not a higher average.</p>`],
+  ['fees','Fees', () => `<div class="tw"><table><thead><tr><th>To</th><th class="r">Share</th></tr></thead><tbody><tr><td>The fab’s operator</td><td class="r">60%</td></tr><tr><td>$FABRICATE buy and burn</td><td class="r">25%</td></tr><tr><td>Operations</td><td class="r">15%</td></tr></tbody></table></div>`],
+  ['rentals','Rentals and auctions', () => `<p>Owners list fabs by the hour, day or week, priced in $FABRICATE. A day is 10% cheaper per hour, a week 25% cheaper. The owner sets how much of the operator share the renter keeps: 50% to 80%. Each payment settles when the rental starts: 90% to the owner, 10% burned. A high-demand fab auctions 24 hours of production slots; each bid must beat the last by 10%.</p>`],
+  ['token','$FABRICATE', () => `<p>$FABRICATE is the pad’s token, launched on pump.fun. It pays for node shrinks, upgrades, chip designs and rentals. 25% of every coin’s creator fees, half of every deploy, 10% of every rental and 5% of every chip design sale buy it back or burn it.</p>`],
+  ['faq','FAQ', () => [
+      ['Who is the creator of the coins?','The fab. Its address is set as the coin’s creator on pump.fun, and the fee split is locked in the same transaction.'],
+      ['Is a grade A chip a sure thing?','No. Grade A chips start with more momentum, but plenty of them go quiet fast.'],
+      ['Does a smaller node earn more?','Not on average. It makes bigger wafers and fills more slots, with a wider spread of outcomes.'],
+      ['What happens when I sell my fab?','Its node, upgrades, history, unclaimed revenue and any listing go with it. Chips already in your tray stay yours.']
+    ].map(([q, a]) => `<details><summary>${q}</summary><p>${a}</p></details>`).join('')],
+];
+function vDocs(){
+  return `<div class="docs"><nav class="panel toc" aria-label="Docs contents"><h2 class="ph">${ICO.docs} Docs <small>contents</small></h2>
+    <ol>${DOCS.map((d, i) => `<li><button data-act="docjump" data-id="${d[0]}"><span>${pad2(i + 1)}</span>${d[1]}</button></li>`).join('')}</ol></nav>
+    <div class="col">${DOCS.map(d => `<section class="panel doc" id="doc-${d[0]}"><h2 class="ph">${d[1]}</h2><div class="body">${d[2]()}</div></section>`).join('')}</div></div>`;
+}
+
+/* ---------- render ---------- */
+let lastVer = -1, lastTab = '', lastRender = 0;
+const VIEWS = { foundry: vFoundry, deploy: vDeploy, mine: vMine, market: vMarket, rentals: vRentals, how: vHow, docs: vDocs };
+function render(force){
+  const now = performance.now();
+  const dynamic = !(tab === 'how' || tab === 'docs');
+  if (!force && tab === lastTab && (!dynamic || S.ver === lastVer || now - lastRender < 1500)) return;
+  lastVer = S.ver; lastTab = tab; lastRender = now;
+  const y = window.scrollY;
+  $('#view').innerHTML = VIEWS[tab]();
+  window.scrollTo(0, y);
+}
+function paintTabs(){ $('#tabs').innerHTML = TABS.map(([k, label, icon], i) => `<a href="#${k}"${tab === k ? ' aria-current="page"' : ''}>${icon}<span>${label}</span><em>${i + 1}</em></a>`).join(''); }
+function updateLive(){ document.querySelectorAll('[data-k]').forEach(el => { const [k, a] = el.dataset.k.split(':'); const f = LIVE[k]; if (!f) return; const v = f(a); if (el.textContent !== v) el.textContent = v; }); }
+function route(){ const h = location.hash.replace('#', ''); tab = VIEWS[h] ? h : 'foundry'; paintTabs(); render(true); updateLive(); }
+
+/* ---------- overlays ---------- */
+let lastFocus = null;
+function modal(html){ if (!$('#overlay').innerHTML) lastFocus = document.activeElement; $('#overlay').innerHTML = `<div class="scrim" data-act="scrim">${html}</div>`; const f = $('#overlay').querySelector('[aria-pressed="true"],button,a'); f && f.focus(); }
+function closeModal(){ $('#overlay').innerHTML = ''; LST.id = 0; SL.id = 0; lastFocus && lastFocus.focus && lastFocus.focus(); }
+function toast(msg){ const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; const box = $('#toasts'); box.appendChild(t); while (box.children.length > 3) box.firstChild.remove(); setTimeout(() => t.remove(), 3800); }
+
+/* ---------- actions ---------- */
+const after = () => { S.ver++; render(true); updateLive(); };
+document.addEventListener('click', async ev => {
+  const go = ev.target.closest('[data-go]');
+  if (go) { if ($('#overlay').innerHTML) closeModal(); location.hash = '#' + go.dataset.go; return; }
+  const a = ev.target.closest('[data-act]');
+  if (!a) { if (!ev.target.closest('.walletcell')) $('#walletMenu').hidden = true; return; }
+  const act = a.dataset.act;
+  if (act === 'scrim') { if (ev.target === a) closeModal(); return; }
+  switch (act) {
+    case 'close': closeModal(); break;
+    case 'wallet':
+      if (W.addr && a.id === 'walletBtn') { const m = $('#walletMenu'); paintWallet(); m.hidden = !m.hidden; }
+      else openWalletModal();
+      break;
+    case 'pickWallet': {
+      const entry = W.list[+a.dataset.i];
+      a.disabled = true; const em = a.querySelector('em'); if (em) em.textContent = 'Approve in wallet…';
+      try { await connectEntry(entry, false); closeModal(); toast(`Connected ${short(W.addr)}`); }
+      catch (err) { a.disabled = false; if (em) em.textContent = 'Detected'; toast(err && err.message && /reject|denied|cancel/i.test(err.message) ? 'Connection request was declined in the wallet.' : 'Couldn’t connect. Unlock the wallet and try again.'); }
+      break; }
+    case 'guestWallet': setWallet(randAddr(Math.random), null); closeModal(); toast('Connected as guest'); break;
+    case 'disconnect': clearWallet(); toast('Wallet disconnected'); break;
+    case 'copyAddr': try { await navigator.clipboard.writeText(W.addr); toast('Address copied'); } catch (e) { toast(W.addr); } break;
+    case 'deploy': {
+      const n = S.fab.length + 1, fee = mintPrice(n); if (!W.addr || n > CFG.SUPPLY || S.wal.sol < fee) break;
+      S.wal.sol -= fee; S.burnSol += fee * 0.5; S.burned += fee * 0.5 / price(); S.ops += fee * 0.5;
+      const f = { id: n, owner: W.addr, node: 0, litho: 1, yld: 1, auto: true, next: S.t + CFG.WAFER_H * HOUR * 0.25, live: 0, count: 0, wafers: 0, unclaimed: 0, rentUn: 0, own: 0, life: 0, rv: 0, j: [], user: true, list: null, rent: null, t: S.t };
+      S.fab.push(f); fById.set(f.id, f); save();
+      toast(`Fab #${n} is online. Its first wafer is in the line.`); location.hash = '#mine'; after(); break; }
+    case 'claim': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; const v = f.unclaimed; S.wal.sol += v; f.unclaimed = 0; toast(v > 0 ? `Collected ${fmtSol(v)} SOL` : 'Nothing to collect yet'); after(); break; }
+    case 'claimAll': { let v = 0; for (const f of myF()) { v += f.unclaimed; f.unclaimed = 0; } for (const f of myRent()) { v += f.rentUn; f.rentUn = 0; } S.wal.sol += v; toast(v > 0 ? `Collected ${fmtSol(v)} SOL` : 'Nothing to collect yet'); after(); break; }
+    case 'buyFab': if (S.wal.sol >= 1) { const t = 1 / price(); S.wal.sol -= 1; S.wal.fab += t; toast(`Swapped 1 SOL for ${fmtTok(t)} $FABRICATE`); after(); } break;
+    case 'launch': { const c = S.tray.find(x => x.id === +a.dataset.c), f = freeFab(); if (!c || !f) break; S.tray = S.tray.filter(x => x !== c); launchChip(f, c); after(); break; }
+    case 'launchBatch': { let n = 0; const order = S.tray.slice().sort((x, y) => GRADES[y.grade] - GRADES[x.grade]); for (const c of order) { const f = freeFab(); if (!f) break; S.tray = S.tray.filter(x => x !== c); launchChip(f, c); n++; } toast(n ? `Launched ${n} chip${n > 1 ? 's' : ''}` : 'No free slots'); after(); break; }
+    case 'recycle': S.tray = S.tray.filter(x => x.id !== +a.dataset.c); toast('Chip design recycled'); after(); break;
+    case 'sellOpen': SL.id = 0; sellModal(a.dataset.c); break;
+    case 'slMult': SL.mult = +a.dataset.v; sellModal(SL.id); break;
+    case 'sellSave': { const c = S.tray.find(x => x.id === +a.dataset.c); if (!c) break; c.price = +a.dataset.p; closeModal(); toast(`$${c.tick} listed for ${fmtTok(c.price)} $FABRICATE`); after(); break; }
+    case 'unsell': { const c = S.tray.find(x => x.id === +a.dataset.c); if (!c) break; c.price = 0; after(); break; }
+    case 'buyChip': { const c = S.mkt.find(x => x.id === +a.dataset.c); if (!c || !W.addr || S.wal.fab < c.price) break; S.wal.fab -= c.price; S.burned += c.price * CFG.SALE_ROYALTY; S.mkt = S.mkt.filter(x => x !== c); c.price = 0; c.owner = W.addr; S.tray.push(c); toast(`You bought chip design $${c.tick}. It’s in your tray.`); after(); break; }
+    case 'setAuto': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; f.auto = a.dataset.v === '1'; after(); break; }
+    case 'node': { const f = fById.get(+a.dataset.id); if (!isMine(f) || f.node >= 4) break; const c = NODES[f.node + 1].cost - NODES[f.node].cost; if (S.wal.fab < c) break; S.wal.fab -= c; S.burned += c; f.node++; toast(`Fab #${f.id} shrank to ${NODES[f.node].n}. ${fmtTok(c)} $FABRICATE burned.`); after(); break; }
+    case 'upgrade': { const f = fById.get(+a.dataset.id), k = a.dataset.k; if (!isMine(f) || f[k] >= UP[k].max) break; const c = UP[k].cost(f[k]); if (S.wal.fab < c) break; S.wal.fab -= c; S.burned += c; f[k]++; toast(`${UP[k].name} is now level ${f[k]}. ${fmtTok(c)} $FABRICATE burned.`); after(); break; }
+    case 'm': M[a.dataset.key] = a.dataset.key === 'dur' ? +a.dataset.val : a.dataset.val; render(true); break;
+    case 'listOpen': LST.id = 0; listModal(a.dataset.id); break;
+    case 'lsShare': LST.share = +a.dataset.v; listModal(LST.id); break;
+    case 'lsMult': LST.mult = +a.dataset.v; listModal(LST.id); break;
+    case 'listSave': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; f.list = { share: LST.share, price: +a.dataset.p, k: LST.mult }; closeModal(); toast(`Fab #${f.id} listed at ${fmtTok(f.list.price)} $FABRICATE an hour`); after(); break; }
+    case 'unlist': { const f = fById.get(+a.dataset.id); if (!isMine(f)) break; f.list = null; toast(`Fab #${f.id} unlisted`); after(); break; }
+    case 'rent': {
+      const f = fById.get(+a.dataset.id), d = DURS[M.dur]; if (!W.addr || !f || !f.list || f.rent || isMine(f) || inAuction(f)) break;
+      const cost = f.list.price * d.h * (1 - d.off); if (S.wal.fab < cost) break;
+      S.wal.fab -= cost; startRent(f, W.addr, true, d.h, cost, f.list.share);
+      toast(`You’re running fab #${f.id} for ${d.name}. You keep ${Math.round(f.list.share * 100)}% of the operator share.`); location.hash = '#mine'; after(); break; }
+    case 'bid': {
+      const au = S.auc.find(x => x.a === +a.dataset.a); if (!au || !W.addr || au.bidder === 'you') break;
+      const next = au.bidder ? r50(au.bid * 1.1) : au.bid; if (S.wal.fab < next) break;
+      S.wal.fab -= next; au.bid = next; au.bidder = 'you'; toast(`You bid ${fmtTok(next)} $FABRICATE on fab #${au.f}`); after(); break; }
+    case 'docjump': { const el = document.getElementById('doc-' + a.dataset.id); el && el.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' }); break; }
+  }
+  if (act !== 'wallet' && !a.closest('#walletMenu')) $('#walletMenu').hidden = true;
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { if ($('#overlay').innerHTML) closeModal(); $('#walletMenu').hidden = true; } });
+window.addEventListener('hashchange', route);
+
+/* ---------- boot ---------- */
+load();
+S.speed = 60;
+route();
+paintWallet();
+setTimeout(eagerConnect, 500);
+let lastTick = performance.now(), lastSave = 0;
+setInterval(() => {
+  const now = performance.now(), dt = Math.min(2, (now - lastTick) / 1000); lastTick = now;
+  if (S.speed > 0) advance(S.speed * dt / 60);
+  updateLive(); render(false);
+  if (now - lastSave > 5000) { save(); lastSave = now; }
+}, 250);
+window.addEventListener('pagehide', save);
+</script>
+</body>
+</html>
